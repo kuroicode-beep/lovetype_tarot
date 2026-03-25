@@ -1,0 +1,905 @@
+# Dev_20260312_LoveType_MVP_API_Spec_v1.txt
+
+서비스명
+LoveType
+
+문서명
+MVP API 명세서
+
+버전
+v1.0
+
+작성일
+2026-03-12
+
+목적
+LoveType MVP의 프론트엔드와 백엔드 간 통신 규격을 정의한다.
+MVP 범위는 오늘의 이야기 / 연애 이야기 2개 카테고리, 소울카드, 3장 카드 리딩, 저장/공유, 사용 제한까지를 포함한다.
+
+기본 원칙
+- 구조는 정식 서비스 기준으로 잡고 기능은 MVP 범위에 맞춘다
+- 응답 포맷은 일관된 JSON 구조 사용
+- 인증은 구글 로그인 기반 토큰 검증 후 자체 세션 또는 JWT 사용 가능
+- 리딩 생성은 백엔드에서 JSON 조합 후 LLM 1회 호출
+- 앱은 최대한 가볍게, 백엔드는 저장/제한/검증/중계 중심
+
+================================================================
+01. 공통 규칙
+================================================================
+
+Base URL 예시
+- https://api.lovetype.app/v1
+
+Content-Type
+- application/json; charset=utf-8
+
+인증 헤더
+- Authorization: Bearer {access_token}
+
+응답 기본 구조
+성공
+{
+  "success": true,
+  "data": {},
+  "meta": {}
+}
+
+실패
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "사용자에게 보여줄 수 있는 문장"
+  }
+}
+
+공통 에러 코드 예시
+- UNAUTHORIZED
+- FORBIDDEN
+- INVALID_REQUEST
+- NOT_FOUND
+- RATE_LIMITED
+- READING_LOCKED
+- PAYMENT_REQUIRED
+- INTERNAL_ERROR
+
+시간 형식
+- ISO 8601 UTC 저장
+- 프론트 표시 시 KST 변환
+
+================================================================
+02. 인증 API
+================================================================
+
+2-1. 구글 로그인 토큰 교환
+
+POST /auth/google
+
+설명
+프론트에서 받은 구글 id_token 또는 access_token을 백엔드에 전달하고
+백엔드가 사용자 생성/조회 후 서비스용 access token 발급
+
+Request
+{
+  "id_token": "google_id_token"
+}
+
+Response
+{
+  "success": true,
+  "data": {
+    "access_token": "lovetype_jwt_or_session_token",
+    "token_type": "Bearer",
+    "user": {
+      "id": 1,
+      "nickname": "인블루",
+      "email": "user@example.com",
+      "is_profile_completed": true
+    }
+  },
+  "meta": {}
+}
+
+비고
+- 최초 로그인 시 users 생성
+- profile_completed 여부에 따라 온보딩 분기
+
+2-2. 내 세션 확인
+
+GET /auth/me
+
+설명
+현재 로그인 사용자 기본 정보 확인
+
+Response
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 1,
+      "nickname": "인블루",
+      "email": "user@example.com",
+      "is_profile_completed": true
+    }
+  },
+  "meta": {}
+}
+
+================================================================
+03. 사용자 프로필 API
+================================================================
+
+3-1. 내 프로필 조회
+
+GET /profile
+
+Response
+{
+  "success": true,
+  "data": {
+    "profile": {
+      "nickname": "인블루",
+      "birth_date": "1990-01-01",
+      "gender": "female",
+      "blood_type": "A",
+      "mbti": "ENFP",
+      "soul_card_number": 7,
+      "soul_card_key": "seeker",
+      "soul_title": "탐색형",
+      "soul_summary": "의미와 내면의 흐름을 오래 바라보는 사람",
+      "profile_completed": true
+    }
+  },
+  "meta": {}
+}
+
+3-2. 내 프로필 저장 / 수정
+
+POST /profile
+
+설명
+최초 입력 및 수정 공용
+
+Request
+{
+  "nickname": "인블루",
+  "birth_date": "1990-01-01",
+  "gender": "female",
+  "blood_type": "A",
+  "mbti": "ENFP"
+}
+
+서버 처리
+- 생년월일 기반 소울카드 계산
+- user_profiles upsert
+- 기본 덱 2종 unlock 보장
+
+Response
+{
+  "success": true,
+  "data": {
+    "profile": {
+      "nickname": "인블루",
+      "birth_date": "1990-01-01",
+      "gender": "female",
+      "blood_type": "A",
+      "mbti": "ENFP",
+      "soul_card_number": 7,
+      "soul_card_key": "seeker",
+      "soul_title": "탐색형",
+      "soul_summary": "의미와 내면의 흐름을 오래 바라보는 사람",
+      "profile_completed": true
+    }
+  },
+  "meta": {}
+}
+
+검증 규칙
+- gender: male / female
+- blood_type: A / B / O / AB
+- mbti: 16유형만 허용
+- nickname: 2~20자 권장
+
+================================================================
+04. 소울카드 API
+================================================================
+
+4-1. 내 소울카드 조회
+
+GET /soul-card
+
+Response
+{
+  "success": true,
+  "data": {
+    "soul_card": {
+      "number": 7,
+      "key": "seeker",
+      "name_kr": "탐색형",
+      "summary": "의미와 내면의 흐름을 오래 바라보는 사람",
+      "avatar_theme": {
+        "frame": "moon_silver",
+        "accent": "soft_cyan"
+      }
+    }
+  },
+  "meta": {}
+}
+
+비고
+- 앱 상단/하단 개인화 UI에서 상시 사용
+- avatar_theme는 추후 카드 테마와 연동 가능
+
+================================================================
+05. 카테고리 / 태그 API
+================================================================
+
+5-1. 카테고리 목록 조회
+
+GET /reading/categories
+
+Response
+{
+  "success": true,
+  "data": {
+    "categories": [
+      {
+        "id": 1,
+        "key": "today",
+        "name_kr": "오늘의 이야기",
+        "description": "오늘의 감정과 흐름을 읽는 이야기"
+      },
+      {
+        "id": 2,
+        "key": "love",
+        "name_kr": "연애 이야기",
+        "description": "관계와 감정의 온도를 읽는 이야기"
+      }
+    ]
+  },
+  "meta": {}
+}
+
+5-2. 카테고리별 태그 목록 조회
+
+GET /reading/categories/{category_key}/focus-tags
+
+예시
+GET /reading/categories/love/focus-tags
+
+Response
+{
+  "success": true,
+  "data": {
+    "category": {
+      "key": "love",
+      "name_kr": "연애 이야기"
+    },
+    "focus_tags": [
+      { "id": 11, "key": "some", "name_kr": "썸" },
+      { "id": 12, "key": "contact", "name_kr": "연락" },
+      { "id": 13, "key": "reunion", "name_kr": "재회" },
+      { "id": 14, "key": "confession", "name_kr": "고백" },
+      { "id": 15, "key": "partner_mind", "name_kr": "상대마음" }
+    ]
+  },
+  "meta": {}
+}
+
+================================================================
+06. 덱 테마 API
+================================================================
+
+6-1. 덱 목록 조회
+
+GET /deck-themes
+
+Response
+{
+  "success": true,
+  "data": {
+    "deck_themes": [
+      {
+        "id": 1,
+        "key": "default_normal",
+        "name_kr": "일반 덱",
+        "is_accessible": false,
+        "is_premium": false,
+        "is_unlocked": true,
+        "is_selected": true
+      },
+      {
+        "id": 2,
+        "key": "default_accessible",
+        "name_kr": "저시력용 덱",
+        "is_accessible": true,
+        "is_premium": false,
+        "is_unlocked": true,
+        "is_selected": false
+      },
+      {
+        "id": 3,
+        "key": "romance_premium",
+        "name_kr": "웹툰 로맨스 덱",
+        "is_accessible": false,
+        "is_premium": true,
+        "is_unlocked": false,
+        "is_selected": false
+      }
+    ]
+  },
+  "meta": {}
+}
+
+6-2. 내 사용 덱 선택
+
+POST /deck-themes/select
+
+Request
+{
+  "deck_theme_key": "default_accessible"
+}
+
+Response
+{
+  "success": true,
+  "data": {
+    "selected_deck_theme": {
+      "key": "default_accessible",
+      "name_kr": "저시력용 덱"
+    }
+  },
+  "meta": {}
+}
+
+검증
+- unlock된 덱만 선택 가능
+
+================================================================
+07. 사용 제한 API
+================================================================
+
+7-1. 카테고리별 사용 가능 여부 조회
+
+GET /usage/check?category_key=today
+
+Response
+{
+  "success": true,
+  "data": {
+    "category_key": "today",
+    "is_available": true,
+    "reason_code": null,
+    "message": null,
+    "next_available_at": null,
+    "free_remaining_today": 1
+  },
+  "meta": {}
+}
+
+잠금 예시 Response
+{
+  "success": true,
+  "data": {
+    "category_key": "love",
+    "is_available": false,
+    "reason_code": "READING_LOCKED",
+    "message": "지금의 카드는 아직 이야기를 이어가는 중입니다.",
+    "next_available_at": "2026-03-12T04:30:00Z",
+    "free_remaining_today": 0
+  },
+  "meta": {}
+}
+
+운영 규칙
+- 무료: 하루 1회
+- 유료: 같은 카테고리 1시간 제한
+
+================================================================
+08. 카드 셔플 / 리딩 생성 API
+================================================================
+
+8-1. 셔플용 카드 후보 조회 (선택)
+
+GET /reading/shuffle-seed?category_key=love&deck_theme_key=default_normal
+
+설명
+필수는 아니지만 프론트에서 셔플 연출용 난수 시드나 카드 후보군을 받을 때 사용 가능
+
+Response
+{
+  "success": true,
+  "data": {
+    "shuffle_seed": "a8f1c0d9",
+    "deck_theme_key": "default_normal"
+  },
+  "meta": {}
+}
+
+비고
+- MVP에서는 프론트 로컬 셔플로 대체 가능
+- 실제 저장은 final generate에서만 발생
+
+8-2. 리딩 생성
+
+POST /reading/generate
+
+설명
+MVP 핵심 API
+프론트가 선택한 카테고리, 태그, 카드 3장, 덱 정보를 전달하면
+백엔드가 payload 조합 후 LLM 1회 호출하여 리딩 결과 생성 및 저장
+
+Request
+{
+  "category_key": "love",
+  "focus_key": "reunion",
+  "deck_theme_key": "default_normal",
+  "cards": [
+    { "card_key": "the_star", "is_reversed": false },
+    { "card_key": "the_moon", "is_reversed": false },
+    { "card_key": "the_sun", "is_reversed": true }
+  ]
+}
+
+서버 처리 순서
+1. 인증 사용자 확인
+2. profile_completed 확인
+3. usage 제한 확인
+4. category / focus / deck 유효성 검증
+5. profile + soul_card + json 리소스 조합
+6. final payload 생성
+7. LLM 1회 호출
+8. readings 저장
+9. reading_cards 3장 저장
+10. usage_limits 업데이트
+11. 응답 반환
+
+Response
+{
+  "success": true,
+  "data": {
+    "reading": {
+      "id": 101,
+      "category": {
+        "key": "love",
+        "name_kr": "연애 이야기"
+      },
+      "focus_tag": {
+        "key": "reunion",
+        "name_kr": "재회"
+      },
+      "deck_theme": {
+        "key": "default_normal",
+        "name_kr": "일반 덱"
+      },
+      "cards": [
+        {
+          "order": 1,
+          "card_key": "the_star",
+          "name_kr": "별",
+          "is_reversed": false
+        },
+        {
+          "order": 2,
+          "card_key": "the_moon",
+          "name_kr": "달",
+          "is_reversed": false
+        },
+        {
+          "order": 3,
+          "card_key": "the_sun",
+          "name_kr": "태양",
+          "is_reversed": true
+        }
+      ],
+      "result": {
+        "summary_text": "다시 믿어보고 싶은 마음이 조용히 살아나는 흐름이에요.",
+        "flow_text": "지금의 감정은 완전히 끝난 것이 아니라, 다시 스스로를 정리하며 움직일 준비를 하는 쪽에 가까워 보여요. 마음속 기대와 현실의 속도는 조금 다를 수 있지만, 그 차이가 오히려 지금 필요한 정리를 보여줄 수 있어요.",
+        "caution_text": "그리움이 확신처럼 느껴질 때는 현재의 신호도 함께 확인하는 편이 좋아요.",
+        "hope_text": "감정의 온도는 아직 남아 있고, 천천히 다시 이어질 여지도 보여요.",
+        "share_text": "끝난 줄 알았던 마음에도, 다시 빛이 스며드는 순간이 있어요."
+      },
+      "created_at": "2026-03-12T03:30:00Z",
+      "next_available_at": "2026-03-12T04:30:00Z"
+    }
+  },
+  "meta": {
+    "llm_model": "deepseek-chat"
+  }
+}
+
+에러 예시
+- READING_LOCKED
+- PROFILE_INCOMPLETE
+- INVALID_CATEGORY
+- INVALID_FOCUS_TAG
+- INVALID_DECK_THEME
+
+================================================================
+09. 히스토리 API
+================================================================
+
+9-1. 내 히스토리 목록 조회
+
+GET /history?cursor=0&limit=20
+
+Response
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "reading_id": 101,
+        "created_at": "2026-03-12T03:30:00Z",
+        "category": {
+          "key": "love",
+          "name_kr": "연애 이야기"
+        },
+        "focus_tag": {
+          "key": "reunion",
+          "name_kr": "재회"
+        },
+        "summary_text": "다시 믿어보고 싶은 마음이 조용히 살아나는 흐름이에요.",
+        "share_text": "끝난 줄 알았던 마음에도, 다시 빛이 스며드는 순간이 있어요.",
+        "cards": [
+          { "order": 1, "card_key": "the_star", "name_kr": "별", "is_reversed": false },
+          { "order": 2, "card_key": "the_moon", "name_kr": "달", "is_reversed": false },
+          { "order": 3, "card_key": "the_sun", "name_kr": "태양", "is_reversed": true }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "cursor": 0,
+    "limit": 20,
+    "has_next": false
+  }
+}
+
+9-2. 히스토리 상세 조회
+
+GET /history/{reading_id}
+
+Response
+{
+  "success": true,
+  "data": {
+    "reading": {
+      "id": 101,
+      "category": {
+        "key": "love",
+        "name_kr": "연애 이야기"
+      },
+      "focus_tag": {
+        "key": "reunion",
+        "name_kr": "재회"
+      },
+      "deck_theme": {
+        "key": "default_normal",
+        "name_kr": "일반 덱"
+      },
+      "cards": [
+        { "order": 1, "card_key": "the_star", "name_kr": "별", "is_reversed": false },
+        { "order": 2, "card_key": "the_moon", "name_kr": "달", "is_reversed": false },
+        { "order": 3, "card_key": "the_sun", "name_kr": "태양", "is_reversed": true }
+      ],
+      "result": {
+        "summary_text": "다시 믿어보고 싶은 마음이 조용히 살아나는 흐름이에요.",
+        "flow_text": "지금의 감정은 완전히 끝난 것이 아니라, 다시 스스로를 정리하며 움직일 준비를 하는 쪽에 가까워 보여요. 마음속 기대와 현실의 속도는 조금 다를 수 있지만, 그 차이가 오히려 지금 필요한 정리를 보여줄 수 있어요.",
+        "caution_text": "그리움이 확신처럼 느껴질 때는 현재의 신호도 함께 확인하는 편이 좋아요.",
+        "hope_text": "감정의 온도는 아직 남아 있고, 천천히 다시 이어질 여지도 보여요.",
+        "share_text": "끝난 줄 알았던 마음에도, 다시 빛이 스며드는 순간이 있어요."
+      },
+      "created_at": "2026-03-12T03:30:00Z"
+    }
+  },
+  "meta": {}
+}
+
+9-3. 히스토리 삭제
+
+DELETE /history/{reading_id}
+
+Response
+{
+  "success": true,
+  "data": {
+    "deleted": true
+  },
+  "meta": {}
+}
+
+비고
+- 실제 DB는 soft delete 권장
+
+================================================================
+10. 공유 API
+================================================================
+
+10-1. 공유용 데이터 조회
+
+GET /share/{reading_id}
+
+설명
+공유 이미지를 만들기 위한 데이터 패키지 반환
+
+Response
+{
+  "success": true,
+  "data": {
+    "reading_id": 101,
+    "share_card": {
+      "title": "연애 이야기",
+      "summary_text": "다시 믿어보고 싶은 마음이 조용히 살아나는 흐름이에요.",
+      "share_text": "끝난 줄 알았던 마음에도, 다시 빛이 스며드는 순간이 있어요.",
+      "cards": [
+        { "order": 1, "card_key": "the_star", "name_kr": "별", "is_reversed": false },
+        { "order": 2, "card_key": "the_moon", "name_kr": "달", "is_reversed": false },
+        { "order": 3, "card_key": "the_sun", "name_kr": "태양", "is_reversed": true }
+      ],
+      "deck_theme_key": "default_normal",
+      "brand_name": "LoveType"
+    }
+  },
+  "meta": {}
+}
+
+10-2. 공유 로그 저장
+
+POST /share/{reading_id}/log
+
+Request
+{
+  "share_channel": "system"
+}
+
+Response
+{
+  "success": true,
+  "data": {
+    "logged": true
+  },
+  "meta": {}
+}
+
+================================================================
+11. 결제 / 구독 API
+================================================================
+
+11-1. 구매 가능 상품 목록
+
+GET /billing/products
+
+Response
+{
+  "success": true,
+  "data": {
+    "products": [
+      {
+        "product_key": "reading_once",
+        "name_kr": "이야기 1회",
+        "price": 1000,
+        "currency": "KRW"
+      },
+      {
+        "product_key": "romance_premium_deck",
+        "name_kr": "웹툰 로맨스 덱",
+        "price": 2000,
+        "currency": "KRW"
+      },
+      {
+        "product_key": "monthly_subscription",
+        "name_kr": "월 구독",
+        "price": 4900,
+        "currency": "KRW"
+      }
+    ]
+  },
+  "meta": {}
+}
+
+11-2. 구매 검증
+
+POST /billing/verify
+
+설명
+앱마켓 결제 완료 후 영수증 또는 구매 토큰 검증
+
+Request
+{
+  "store_provider": "google_play",
+  "product_key": "romance_premium_deck",
+  "purchase_token": "store_purchase_token"
+}
+
+Response
+{
+  "success": true,
+  "data": {
+    "purchase": {
+      "id": 501,
+      "product_key": "romance_premium_deck",
+      "status": "paid"
+    },
+    "entitlement": {
+      "type": "deck_theme",
+      "deck_theme_key": "romance_premium",
+      "is_unlocked": true
+    }
+  },
+  "meta": {}
+}
+
+11-3. 구독 상태 조회
+
+GET /billing/subscription
+
+Response
+{
+  "success": true,
+  "data": {
+    "subscription": {
+      "status": "active",
+      "plan_key": "monthly_subscription",
+      "expires_at": "2026-04-12T00:00:00Z",
+      "auto_renew": true
+    }
+  },
+  "meta": {}
+}
+
+비고
+- MVP 초반에는 엔드포인트만 선반영, 실제 연결은 후순위 가능
+
+================================================================
+12. 환불 API
+================================================================
+
+12-1. 환불 요청
+
+POST /refunds/request
+
+Request
+{
+  "purchase_id": 501,
+  "reason_text": "중복 결제"
+}
+
+Response
+{
+  "success": true,
+  "data": {
+    "refund_request": {
+      "id": 31,
+      "status": "requested",
+      "policy_type": "normal_flexible"
+    }
+  },
+  "meta": {}
+}
+
+운영 원칙
+- 기준은 노멀
+- 적용은 관대
+- 미사용 / 오작동 / 중복 결제는 우선 환불
+
+================================================================
+13. 관리자 / 운영 참고용 API
+================================================================
+
+13-1. 프롬프트 버전 확인 (선택)
+
+GET /system/prompt-version
+
+Response
+{
+  "success": true,
+  "data": {
+    "prompt_version": "v1.0.0",
+    "llm_provider": "deepseek",
+    "llm_model": "deepseek-chat"
+  },
+  "meta": {}
+}
+
+13-2. 헬스체크
+
+GET /health
+
+Response
+{
+  "success": true,
+  "data": {
+    "status": "ok"
+  },
+  "meta": {}
+}
+
+================================================================
+14. 주요 상태 흐름
+================================================================
+
+A. 회원 진입
+1. /auth/google
+2. /auth/me
+3. profile_completed false면 /profile 저장
+4. /soul-card 조회
+5. /deck-themes 조회
+
+B. 리딩 시작
+1. /reading/categories
+2. /reading/categories/{key}/focus-tags
+3. /usage/check
+4. /reading/generate
+
+C. 결과 이후
+1. /history
+2. /share/{reading_id}
+3. /share/{reading_id}/log
+
+D. 결제 확장
+1. /billing/products
+2. /billing/verify
+3. /billing/subscription
+4. /refunds/request
+
+================================================================
+15. MVP 우선 구현 API 순서
+================================================================
+
+1순위
+- POST /auth/google
+- GET /auth/me
+- GET /profile
+- POST /profile
+- GET /soul-card
+- GET /reading/categories
+- GET /reading/categories/{category_key}/focus-tags
+- GET /usage/check
+- POST /reading/generate
+- GET /history
+- GET /history/{reading_id}
+- DELETE /history/{reading_id}
+- GET /deck-themes
+- POST /deck-themes/select
+
+2순위
+- GET /share/{reading_id}
+- POST /share/{reading_id}/log
+
+3순위
+- GET /billing/products
+- POST /billing/verify
+- GET /billing/subscription
+- POST /refunds/request
+
+================================================================
+16. 프론트 구현 시 주의점
+================================================================
+
+- /reading/generate 호출 전 /usage/check 선확인
+- 카드 셔플 연출은 프론트 처리 가능, 저장은 generate 이후만
+- 소울카드는 홈/결과/히스토리 상단에서 공통 사용
+- 리딩 결과는 저장용 텍스트와 공유용 텍스트를 분리 사용
+- deck_theme_key는 항상 명시적으로 전달
+- profile_completed false 상태에서는 리딩 관련 API 제한
+
+================================================================
+17. 백엔드 구현 시 주의점
+================================================================
+
+- 인증 토큰 검증 실패 시 401 고정
+- 카테고리/태그/덱은 마스터 테이블 기준 검증
+- payload_json은 readings에 그대로 저장
+- LLM 호출 실패 시 readings 미생성 또는 failed 상태 별도 처리 고려
+- usage 제한은 generate 직전 재확인
+- same category 1시간 락은 서버 시간이 기준
+- 응답 메시지는 사용자 친화적으로 유지
+
+================================================================
+18. 최종 한 줄
+================================================================
+
+LoveType MVP API는
+개인화 프로필, 소울카드, 2개 카테고리 리딩, 히스토리, 덱 선택, 사용 제한을
+얇고 확장 가능한 방식으로 연결하는 백엔드 계약 문서다.
