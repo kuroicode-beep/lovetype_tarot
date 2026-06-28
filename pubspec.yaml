@@ -73,9 +73,9 @@ flutter:
     - asset/low_vision_deck/
     - asset/webtoon_deck/
     - asset/soul_cards/
-    - asset/bg_intro.png
-    - asset/bg_info_input.png
-    - asset/bg_result.png
+    - asset/bg_intro.webp
+    - asset/bg_info_input.webp
+    - asset/bg_result.webp
 
 flutter_launcher_icons:
   android: true

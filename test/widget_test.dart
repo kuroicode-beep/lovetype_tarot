@@ -70,13 +70,13 @@ void main() {
 
   group('soulCardImagePath', () {
     test('풀샷 에셋 경로 반환', () {
-      expect(soulCardImagePath(1), 'asset/soul_cards/soul_01_magician.png');
-      expect(soulCardImagePath(9), 'asset/soul_cards/soul_09_hermit.png');
+      expect(soulCardImagePath(1), 'asset/soul_cards/soul_01_magician.webp');
+      expect(soulCardImagePath(9), 'asset/soul_cards/soul_09_hermit.webp');
     });
 
     test('아바타 에셋 경로 반환', () {
-      expect(soulCardAvatarPath(1), 'asset/soul_cards/avatar_01_magician.png');
-      expect(soulCardAvatarPath(9), 'asset/soul_cards/avatar_09_hermit.png');
+      expect(soulCardAvatarPath(1), 'asset/soul_cards/avatar_01_magician.webp');
+      expect(soulCardAvatarPath(9), 'asset/soul_cards/avatar_09_hermit.webp');
     });
   });
 

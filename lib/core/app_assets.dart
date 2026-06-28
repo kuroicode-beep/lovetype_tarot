@@ -2,7 +2,7 @@
 class AppAssets {
   AppAssets._();
 
-  static const String bgIntro = 'asset/bg_intro.png';
-  static const String bgInfoInput = 'asset/bg_info_input.png';
-  static const String bgResult = 'asset/bg_result.png';
+  static const String bgIntro = 'asset/bg_intro.webp';
+  static const String bgInfoInput = 'asset/bg_info_input.webp';
+  static const String bgResult = 'asset/bg_result.webp';
 }

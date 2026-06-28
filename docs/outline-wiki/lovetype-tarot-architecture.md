@@ -68,11 +68,10 @@ flowchart TD
 - Android debug APK 빌드 성공
 - 스토어 배포 전 release keystore 설정 필요
 - `baseUrl`은 현재 코드 상수이며 flavor 또는 dart-define 분리가 필요
-- PNG 덱 3종으로 APK 용량이 크므로 AAB/이미지 최적화 검토 필요
+- 덱 3종은 WebP로 최적화했으며, 스토어 업로드 전 AAB 크기와 실제 다운로드 크기 확인 필요
 
 ## 08. 보안 / 접근성
 
 - 민감 로그와 FCM token 관련 debug output은 릴리즈 전 점검 필요
 - 고대비 모드와 저시력용 덱을 기본 접근성 축으로 유지
 - 서버 쿨타임 확인 실패 시 앱은 임의 허용하지 않고 진입을 막는다.
-

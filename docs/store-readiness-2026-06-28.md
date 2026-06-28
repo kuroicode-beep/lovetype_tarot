@@ -14,6 +14,9 @@
 - 스토어 미사용 환경에서 서버 직접충전 fallback 제거
 - Android release signing이 debug key를 쓰지 않도록 차단
 - Android Billing permission 명시
+- 카드/배경 런타임 이미지를 WebP로 최적화
+- 로컬 release keystore 생성 완료: `android/release-lovetype.jks`
+- release AAB 생성 완료: `build/app/outputs/bundle/release/app-release.aab`
 
 ## 02. 스토어 상품 ID
 
@@ -77,6 +80,11 @@ C:\Projects\lovetype_tarot\android\release-lovetype.jks
 
 `android/key.properties`, `*.jks`, `*.keystore`는 `.gitignore`에 추가되어 있다.
 
+주의:
+
+- `android/key.properties`와 `android/release-lovetype.jks`는 로컬에 생성되어 있으며 Git에 커밋되지 않는다.
+- 이 키를 잃으면 동일 패키지의 업데이트 배포가 어려워질 수 있으므로 안전한 비밀 저장소에 백업한다.
+
 ## 05. 빌드 명령
 
 debug QA:
@@ -93,6 +101,11 @@ flutter build apk --debug
 flutter build appbundle --release
 ```
 
+현재 생성 결과:
+
+- `app-release.aab`: 약 60.5MB
+- debug APK: 약 165.7MB
+
 `android/key.properties`가 없으면 release 빌드는 실패해야 정상이다. debug key로 release가 만들어지면 안 된다.
 
 ## 06. 스토어 콘솔 등록 직전 남은 일
@@ -103,7 +116,7 @@ flutter build appbundle --release
 - 라이선스 테스트 계정 등록
 - 내부 테스트 트랙 업로드
 - 서버 영수증 검증 연동 확인
-- 개인정보처리방침 URL 준비
+- 개인정보처리방침 URL 준비: 초안은 `docs/privacy-policy-ko.md`
 - 앱 아이콘/스크린샷/설명/카테고리/콘텐츠 등급 준비
 
 ## 07. QA 합격 기준

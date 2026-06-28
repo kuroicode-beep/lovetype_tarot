@@ -17,10 +17,7 @@ int calcSoulCard(String birthdate) {
 
   // 두 자리 이상이면 각 자리 합산 반복
   while (sum >= 10) {
-    sum = sum
-        .toString()
-        .codeUnits
-        .fold(0, (acc, c) => acc + (c - 48));
+    sum = sum.toString().codeUnits.fold(0, (acc, c) => acc + (c - 48));
   }
 
   return sum == 0 ? 9 : sum; // 0이 나오는 경우 방어 처리 (실제론 불가)
@@ -39,7 +36,7 @@ const Map<int, String> soulCardNames = {
   9: '은둔자',
 };
 
-/// 소울카드 번호 → `asset/soul_cards/soul_NN_<slug>.png` 파일 접미사
+/// 소울카드 번호 → `asset/soul_cards/soul_NN_<slug>.webp` 파일 접미사
 const Map<int, String> soulCardAssetSlug = {
   1: 'magician',
   2: 'high_priestess',
@@ -59,7 +56,7 @@ String soulCardImagePath(int number) {
     throw ArgumentError.value(number, 'number', 'expected 1~9');
   }
   final nn = number.toString().padLeft(2, '0');
-  return 'asset/soul_cards/soul_${nn}_$slug.png';
+  return 'asset/soul_cards/soul_${nn}_$slug.webp';
 }
 
 /// 소울카드 번호 → 원형 아바타 이미지 에셋 경로 (하단 바용)
@@ -69,7 +66,7 @@ String soulCardAvatarPath(int number) {
     throw ArgumentError.value(number, 'number', 'expected 1~9');
   }
   final nn = number.toString().padLeft(2, '0');
-  return 'asset/soul_cards/avatar_${nn}_$slug.png';
+  return 'asset/soul_cards/avatar_${nn}_$slug.webp';
 }
 
 /// 소울카드 번호 → 성격 설명 (소울카드 등장 화면 / AI 프롬프트용)
@@ -84,4 +81,3 @@ const Map<int, String> soulCardDescriptions = {
   8: '겉으로는 부드럽지만 내면에 단단한 힘을 가진, 진정한 강인함의 소유자예요.',
   9: '깊은 사색과 통찰력으로 남들이 보지 못하는 것을 꿰뚫어 보는 지혜가 있어요.',
 };
-

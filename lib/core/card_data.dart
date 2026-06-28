@@ -3,12 +3,36 @@ import '../models/tarot_card.dart';
 // 타로 78장 전체 카드 데이터
 
 const _minorRanksKo = [
-  '에이스', '2', '3', '4', '5', '6', '7',
-  '8', '9', '10', '시종', '기사', '여왕', '왕',
+  '에이스',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  '10',
+  '시종',
+  '기사',
+  '여왕',
+  '왕',
 ];
 const _minorRanksEn = [
-  'Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven',
-  'Eight', 'Nine', 'Ten', 'Page', 'Knight', 'Queen', 'King',
+  'Ace',
+  'Two',
+  'Three',
+  'Four',
+  'Five',
+  'Six',
+  'Seven',
+  'Eight',
+  'Nine',
+  'Ten',
+  'Page',
+  'Knight',
+  'Queen',
+  'King',
 ];
 
 List<TarotCard> _minor(String id, String koName, String enName) {
@@ -35,7 +59,11 @@ final List<TarotCard> allTarotCards = [
   const TarotCard(id: 'major_07', nameKo: '전차', nameEn: 'The Chariot'),
   const TarotCard(id: 'major_08', nameKo: '힘', nameEn: 'Strength'),
   const TarotCard(id: 'major_09', nameKo: '은둔자', nameEn: 'The Hermit'),
-  const TarotCard(id: 'major_10', nameKo: '운명의 수레바퀴', nameEn: 'Wheel of Fortune'),
+  const TarotCard(
+    id: 'major_10',
+    nameKo: '운명의 수레바퀴',
+    nameEn: 'Wheel of Fortune',
+  ),
   const TarotCard(id: 'major_11', nameKo: '정의', nameEn: 'Justice'),
   const TarotCard(id: 'major_12', nameKo: '매달린 남자', nameEn: 'The Hanged Man'),
   const TarotCard(id: 'major_13', nameKo: '죽음', nameEn: 'Death'),
@@ -61,20 +89,16 @@ int tarotCardDeckNumber(TarotCard card) {
   return i >= 0 ? i + 1 : 0;
 }
 
-// ── `asset/basic_deck` 등 실제 PNG 파일명과 카드 id 연결 ───────────────
+// ── `asset/basic_deck` 등 실제 WebP 파일명과 카드 id 연결 ──────────────
 
 /// 표시용 덱 (폴더: basic_deck / low_vision_deck / webtoon_deck)
-enum TarotDeckVisual {
-  basic,
-  lowVision,
-  webtoon,
-}
+enum TarotDeckVisual { basic, lowVision, webtoon }
 
 String _tarotDeckVisualFolder(TarotDeckVisual deck) => switch (deck) {
-      TarotDeckVisual.basic => 'basic_deck',
-      TarotDeckVisual.lowVision => 'low_vision_deck',
-      TarotDeckVisual.webtoon => 'webtoon_deck',
-    };
+  TarotDeckVisual.basic => 'basic_deck',
+  TarotDeckVisual.lowVision => 'low_vision_deck',
+  TarotDeckVisual.webtoon => 'webtoon_deck',
+};
 
 /// 고대비 ON → 저시력 덱, 구독 중이면 웹툰 덱, 아니면 기본 덱.
 TarotDeckVisual resolveTarotDeckVisual({
@@ -111,11 +135,11 @@ const _majorAssetPrefixes = [
   '21_The_World',
 ];
 
-/// `major_00` … `pentacle_14` → `00_The_Fool_00001_.png` 형식 파일명
+/// `major_00` … `pentacle_14` → `00_The_Fool_00001_.webp` 형식 파일명
 String tarotCardImageFileName(String id) {
   if (id.startsWith('major_')) {
     final idx = int.parse(id.substring(6));
-    return '${_majorAssetPrefixes[idx]}_00001_.png';
+    return '${_majorAssetPrefixes[idx]}_00001_.webp';
   }
   final u = id.indexOf('_');
   if (u <= 0) {
@@ -132,7 +156,7 @@ String tarotCardImageFileName(String id) {
   };
   final n = int.parse(num);
   final rank = _minorRanksEn[n - 1];
-  return '${suitCap}_${num}_${rank}_00001_.png';
+  return '${suitCap}_${num}_${rank}_00001_.webp';
 }
 
 String tarotCardImagePath(String id, TarotDeckVisual deck) {
