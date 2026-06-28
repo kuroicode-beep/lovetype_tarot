@@ -24,22 +24,45 @@ class IapService {
   Future<void> Function()? _onSuccess;
   Future<void> Function(String message)? _onError;
 
-  static const Set<String> productIds = {
-    'tarot_10p',
-    'tarot_1',
-    'tarot_6',
-    'tarot_13',
-    'tarot_40',
-    'tarot_sub',
+  static const Map<String, IapProductConfig> products = {
+    'tarot_10p': IapProductConfig.consumable(
+      id: 'tarot_10p',
+      title: '10P 충전',
+      credits: 10,
+      displayPrice: '1,000원',
+    ),
+    'tarot_1': IapProductConfig.consumable(
+      id: 'tarot_1',
+      title: '1P 충전',
+      credits: 1,
+      displayPrice: '100원',
+    ),
+    'tarot_6': IapProductConfig.consumable(
+      id: 'tarot_6',
+      title: '6P 충전',
+      credits: 6,
+      displayPrice: '600원',
+    ),
+    'tarot_13': IapProductConfig.consumable(
+      id: 'tarot_13',
+      title: '13P 충전',
+      credits: 13,
+      displayPrice: '1,300원',
+    ),
+    'tarot_40': IapProductConfig.consumable(
+      id: 'tarot_40',
+      title: '40P 충전',
+      credits: 40,
+      displayPrice: '4,000원',
+    ),
+    'tarot_sub': IapProductConfig.subscription(
+      id: 'tarot_sub',
+      title: '월 구독',
+      displayPrice: '4,900원',
+    ),
   };
 
-  static const Map<String, int> _productCredits = {
-    'tarot_10p': 10,
-    'tarot_1': 1,
-    'tarot_6': 6,
-    'tarot_13': 13,
-    'tarot_40': 40,
-  };
+  static Set<String> get productIds => products.keys.toSet();
 
   Future<void> init() async {
     if (_initialized) return;
@@ -163,16 +186,15 @@ class IapService {
       debugPrint('[IapService] serverVerificationData 비어 있음');
     }
     try {
-      final amount =
-          _productCredits[purchase.productID] ??
-          _productCredits[_pendingProductId ?? ''] ??
-          0;
+      final config =
+          products[purchase.productID] ?? products[_pendingProductId];
       await ApiService.instance.postPaymentCharge({
         'app_id': AppConstants.appId,
         'user_id': StorageService.instance.effectiveUserIdForHistory(user),
         'product_id': purchase.productID,
         'receipt': receipt,
-        'amount': amount,
+        'amount': config?.credits ?? 0,
+        'product_type': config?.type.name ?? 'unknown',
         'platform': defaultTargetPlatform.name,
         'transaction_id': purchase.purchaseID,
         'source': 'in_app_purchase',
@@ -208,4 +230,47 @@ class IapService {
       await cb(message);
     }
   }
+}
+
+enum IapProductType { consumable, subscription }
+
+class IapProductConfig {
+  final String id;
+  final String title;
+  final int credits;
+  final String displayPrice;
+  final IapProductType type;
+
+  const IapProductConfig._({
+    required this.id,
+    required this.title,
+    required this.credits,
+    required this.displayPrice,
+    required this.type,
+  });
+
+  const IapProductConfig.consumable({
+    required String id,
+    required String title,
+    required int credits,
+    required String displayPrice,
+  }) : this._(
+         id: id,
+         title: title,
+         credits: credits,
+         displayPrice: displayPrice,
+         type: IapProductType.consumable,
+       );
+
+  const IapProductConfig.subscription({
+    required String id,
+    required String title,
+    required String displayPrice,
+  }) : this._(
+         id: id,
+         title: title,
+         credits: 0,
+         displayPrice: displayPrice,
+         type: IapProductType.subscription,
+       );
 }

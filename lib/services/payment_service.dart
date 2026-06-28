@@ -48,17 +48,6 @@ class PaymentService {
     await StorageService.instance.setSubscriptionExpiresAt(expiresAt);
   }
 
-  Future<void> charge(UserModel user, {required String productId}) async {
-    final amount = productId == 'tarot_sub' ? 80 : 10;
-    await ApiService.instance.postPaymentCharge({
-      'app_id': AppConstants.appId,
-      'user_id': _userId(user),
-      'amount': amount,
-      'product_id': productId,
-    });
-    await refreshBalance(user);
-  }
-
   Future<bool> usePoints({
     required UserModel user,
     required int amount,
@@ -129,25 +118,7 @@ class PaymentService {
               ),
               TextButton(
                 onPressed: () async {
-                  await IapService.instance.init();
-                  if (IapService.instance.storeAvailable) {
-                    await IapService.instance.buy(
-                      'tarot_10p',
-                      user,
-                      onSuccess: () async {
-                        if (context.mounted) Navigator.pop(context, true);
-                      },
-                      onError: (message) async {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text(message)));
-                      },
-                    );
-                  } else {
-                    await charge(user, productId: 'tarot_10p');
-                    if (context.mounted) Navigator.pop(context, true);
-                  }
+                  await _startStorePurchase(context, user, 'tarot_10p');
                 },
                 child: const Text(
                   '1,000원 충전',
@@ -156,25 +127,7 @@ class PaymentService {
               ),
               TextButton(
                 onPressed: () async {
-                  await IapService.instance.init();
-                  if (IapService.instance.storeAvailable) {
-                    await IapService.instance.buy(
-                      'tarot_sub',
-                      user,
-                      onSuccess: () async {
-                        if (context.mounted) Navigator.pop(context, true);
-                      },
-                      onError: (message) async {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(
-                          context,
-                        ).showSnackBar(SnackBar(content: Text(message)));
-                      },
-                    );
-                  } else {
-                    await charge(user, productId: 'tarot_sub');
-                    if (context.mounted) Navigator.pop(context, true);
-                  }
+                  await _startStorePurchase(context, user, 'tarot_sub');
                 },
                 child: const Text(
                   '월 구독 4,900원',
@@ -187,5 +140,40 @@ class PaymentService {
         false;
 
     return purchased;
+  }
+
+  Future<void> _startStorePurchase(
+    BuildContext context,
+    UserModel user,
+    String productId,
+  ) async {
+    await IapService.instance.init();
+    if (!context.mounted) return;
+    if (!IapService.instance.storeAvailable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('스토어 결제를 사용할 수 없습니다. 테스트 기기와 스토어 설정을 확인해 주세요.'),
+        ),
+      );
+      return;
+    }
+    final started = await IapService.instance.buy(
+      productId,
+      user,
+      onSuccess: () async {
+        if (context.mounted) Navigator.pop(context, true);
+      },
+      onError: (message) async {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      },
+    );
+    if (!started && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('결제를 시작하지 못했습니다.')));
+    }
   }
 }
