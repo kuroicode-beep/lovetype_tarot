@@ -27,6 +27,7 @@ flutter analyze
 flutter test
 flutter build apk --debug
 flutter build appbundle --release
+.\tools\verify_store_readiness.ps1
 ```
 
 이 감사 문서를 갱신할 때는 위 명령을 다시 실행하고 결과를 아래 기록에 추가한다.
@@ -42,6 +43,7 @@ flutter build appbundle --release
 | IAP QA | `docs/qa-iap-store-2026-06-28.md` |
 | Privacy draft | `docs/privacy-policy-ko.md` |
 | Store listing draft | `docs/store-listing-draft-ko.md` |
+| Readiness verifier | `tools/verify_store_readiness.ps1` |
 
 ## 04. 외부 상태가 필요한 미완료 항목
 

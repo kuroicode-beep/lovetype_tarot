@@ -24,6 +24,7 @@ flutter pub get
 flutter analyze
 flutter test
 flutter build appbundle --release
+.\tools\verify_store_readiness.ps1
 ```
 
 The generated Android upload candidate is:
@@ -63,3 +64,15 @@ be expanded without changing the receipt contract.
 - Privacy policy draft: `docs/privacy-policy-ko.md`
 - Store listing draft: `docs/store-listing-draft-ko.md`
 - Completion audit: `docs/store-registration-completion-audit-2026-06-28.md`
+
+## Local Readiness Gate
+
+Run the store readiness gate before uploading a build:
+
+```powershell
+.\tools\verify_store_readiness.ps1
+```
+
+The script fails on local release blockers and warns for items that require
+store-console or operator information, such as the public privacy policy URL and
+store test purchases.
