@@ -143,23 +143,6 @@ class StorageService {
     await setPendingHistoryEntries(q);
   }
 
-  // ── 쿨타임 ────────────────────────────────────────────────
-  Future<void> setLastReadingTime(String key) =>
-      _p.setString(key, DateTime.now().toIso8601String());
-
-  DateTime? getLastReadingTime(String key) {
-    final s = _p.getString(key);
-    return s != null ? DateTime.parse(s) : null;
-  }
-
-  Duration? getRemainingCooldown(String key) {
-    final last = getLastReadingTime(key);
-    if (last == null) return null;
-    final diff = DateTime.now().difference(last);
-    final remaining = AppConstants.readingCooldown - diff;
-    return remaining.isNegative ? null : remaining;
-  }
-
   // ── 초기화 ────────────────────────────────────────────────
   Future<void> clearAll() => _p.clear();
 }

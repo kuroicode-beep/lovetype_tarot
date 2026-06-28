@@ -85,9 +85,7 @@ class _ResultScreenState extends State<ResultScreen>
           setState(() => _isSaved = synced);
         }
         await _usePointsIfNeeded();
-        await NotificationService.instance.scheduleCooldownUnlock(
-          topic: widget.args.topic,
-        );
+        await _scheduleServerCooldownNotification();
       }
     } catch (e) {
       if (mounted) {
@@ -101,7 +99,9 @@ class _ResultScreenState extends State<ResultScreen>
 
   Future<void> _usePointsIfNeeded() async {
     if (_pointUsed || _user == null) return;
-    final amount = PaymentService.instance.requiredPointsForTopic(widget.args.topic);
+    final amount = PaymentService.instance.requiredPointsForTopic(
+      widget.args.topic,
+    );
     if (amount <= 0) {
       _pointUsed = true;
       return;
@@ -121,6 +121,26 @@ class _ResultScreenState extends State<ResultScreen>
           behavior: SnackBarBehavior.floating,
         ),
       );
+    }
+  }
+
+  Future<void> _scheduleServerCooldownNotification() async {
+    final user = _user;
+    if (user == null) return;
+    try {
+      final status = await ApiService.instance.getReadingCooltime(
+        user: user,
+        topic: widget.args.topic,
+      );
+      final remaining = status.remaining();
+      if (remaining == null) return;
+      await NotificationService.instance.scheduleCooldownUnlock(
+        topic: widget.args.topic,
+        delay: remaining,
+      );
+    } catch (_) {
+      // Server cooltime is the source of truth. If it cannot be confirmed,
+      // skip the local unlock notification instead of guessing.
     }
   }
 
@@ -167,9 +187,7 @@ class _ResultScreenState extends State<ResultScreen>
     setState(() => _isSaved = ok);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          ok ? '저장되었습니다' : '오프라인에 보관했습니다. 연결 시 자동으로 전송돼요.',
-        ),
+        content: Text(ok ? '저장되었습니다' : '오프라인에 보관했습니다. 연결 시 자동으로 전송돼요.'),
         backgroundColor: AppTheme.backgroundCard,
         behavior: SnackBarBehavior.floating,
       ),
@@ -194,12 +212,17 @@ class _ResultScreenState extends State<ResultScreen>
                 // 헤더
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios,
-                            color: AppTheme.textSecondary, size: 20),
+                        icon: const Icon(
+                          Icons.arrow_back_ios,
+                          color: AppTheme.textSecondary,
+                          size: 20,
+                        ),
                         onPressed: () => Navigator.pop(context),
                         padding: EdgeInsets.zero,
                       ),
@@ -225,17 +248,17 @@ class _ResultScreenState extends State<ResultScreen>
                   child: _isLoading
                       ? _LoadingView(controller: _loadingController)
                       : _errorMessage != null
-                          ? _ErrorView(
-                              message: _errorMessage!,
-                              onRetry: () {
-                                setState(() {
-                                  _isLoading = true;
-                                  _errorMessage = null;
-                                });
-                                _fetchResult();
-                              },
-                            )
-                          : _ResultText(text: _resultText!),
+                      ? _ErrorView(
+                          message: _errorMessage!,
+                          onRetry: () {
+                            setState(() {
+                              _isLoading = true;
+                              _errorMessage = null;
+                            });
+                            _fetchResult();
+                          },
+                        )
+                      : _ResultText(text: _resultText!),
                 ),
 
                 // 하단 액션 버튼 4개
@@ -308,10 +331,7 @@ class _SoulAvatar extends StatelessWidget {
               errorBuilder: (context, error, stackTrace) => Container(
                 color: AppTheme.backgroundCard,
                 child: Center(
-                  child: Text(
-                    '✨',
-                    style: const TextStyle(fontSize: 24),
-                  ),
+                  child: Text('✨', style: const TextStyle(fontSize: 24)),
                 ),
               ),
             ),
@@ -418,9 +438,7 @@ class _ResultText extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppTheme.backgroundCard.withValues(alpha: 0.85),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: AppTheme.gold.withValues(alpha: 0.25),
-          ),
+          border: Border.all(color: AppTheme.gold.withValues(alpha: 0.25)),
         ),
         child: Text(
           text,
@@ -458,15 +476,15 @@ class _ActionBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       decoration: BoxDecoration(
         color: AppTheme.backgroundCard.withValues(alpha: 0.9),
-        border: const Border(
-          top: BorderSide(color: AppTheme.divider),
-        ),
+        border: const Border(top: BorderSide(color: AppTheme.divider)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _ActionBtn(
-            icon: isSpeaking ? Icons.stop_circle_outlined : Icons.volume_up_outlined,
+            icon: isSpeaking
+                ? Icons.stop_circle_outlined
+                : Icons.volume_up_outlined,
             label: isSpeaking ? '멈추기' : '듣기',
             onTap: onTts,
             isActive: isSpeaking,
@@ -482,11 +500,7 @@ class _ActionBar extends StatelessWidget {
             label: '공유',
             onTap: onShare,
           ),
-          _ActionBtn(
-            icon: Icons.refresh,
-            label: '다른 이야기',
-            onTap: onRestart,
-          ),
+          _ActionBtn(icon: Icons.refresh, label: '다른 이야기', onTap: onRestart),
         ],
       ),
     );

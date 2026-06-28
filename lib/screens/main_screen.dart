@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
-import '../core/constants.dart';
 import '../models/user_model.dart';
 import '../models/reading_args.dart';
+import '../services/api_service.dart';
 import '../services/payment_service.dart';
 import '../services/storage_service.dart';
 import '../widgets/bottom_bar.dart';
@@ -21,6 +21,10 @@ class _MainScreenState extends State<MainScreen> {
   // 쿨타임 남은 시간 (null = 가능)
   Duration? _dailyCooldown;
   Duration? _romanceCooldown;
+  DateTime? _dailyNextAvailableAt;
+  DateTime? _romanceNextAvailableAt;
+  bool _cooldownLoading = false;
+  String? _cooldownErrorMessage;
 
   @override
   void initState() {
@@ -30,10 +34,10 @@ class _MainScreenState extends State<MainScreen> {
     if (_user != null) {
       PaymentService.instance.refreshBalance(_user!).catchError((_) {});
     }
-    _refreshCooldowns();
+    unawaited(_loadServerCooldowns());
     // 1초마다 카운터 갱신
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      _refreshCooldowns();
+      _tickCooldowns();
     });
   }
 
@@ -43,17 +47,58 @@ class _MainScreenState extends State<MainScreen> {
     super.dispose();
   }
 
-  void _refreshCooldowns() {
-    final daily = StorageService.instance
-        .getRemainingCooldown(AppConstants.keyLastDailyReading);
-    final romance = StorageService.instance
-        .getRemainingCooldown(AppConstants.keyLastRomanceReading);
+  Future<void> _loadServerCooldowns() async {
+    final user = _user;
+    if (user == null) return;
+    if (mounted) {
+      setState(() {
+        _cooldownLoading = true;
+        _cooldownErrorMessage = null;
+      });
+    }
+    try {
+      final results = await Future.wait([
+        ApiService.instance.getReadingCooltime(user: user, topic: 'daily'),
+        ApiService.instance.getReadingCooltime(user: user, topic: 'romance'),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _dailyNextAvailableAt = results[0].nextAvailableAt;
+        _romanceNextAvailableAt = results[1].nextAvailableAt;
+        _cooldownLoading = false;
+        _cooldownErrorMessage = null;
+      });
+      _tickCooldowns();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _cooldownLoading = false;
+        _cooldownErrorMessage = '서버 쿨타임을 확인할 수 없습니다.';
+        _dailyCooldown = null;
+        _romanceCooldown = null;
+      });
+    }
+  }
+
+  void _tickCooldowns() {
+    final daily = _remainingUntil(_dailyNextAvailableAt);
+    final romance = _remainingUntil(_romanceNextAvailableAt);
     if (mounted) {
       setState(() {
         _dailyCooldown = daily;
         _romanceCooldown = romance;
+        if (daily == null) _dailyNextAvailableAt = null;
+        if (romance == null) _romanceNextAvailableAt = null;
       });
     }
+  }
+
+  Duration? _remainingUntil(DateTime? nextAvailableAt) {
+    if (nextAvailableAt == null) return null;
+    final remaining = nextAvailableAt.toLocal().difference(DateTime.now());
+    return remaining.isNegative || remaining == Duration.zero
+        ? null
+        : remaining;
   }
 
   String _formatDuration(Duration d) {
@@ -64,46 +109,21 @@ class _MainScreenState extends State<MainScreen> {
     return '$m:$s';
   }
 
-  Future<void> _onReadingTap(String key, String route) async {
-    final cooldown = key == AppConstants.keyLastDailyReading
-        ? _dailyCooldown
-        : _romanceCooldown;
+  Future<void> _onReadingTap(String topic, String route) async {
+    final user = _user;
+    if (user == null) return;
 
-    if (cooldown != null) {
-      // 쿨타임 중 → 다이얼로그
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          backgroundColor: AppTheme.backgroundCard,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text(
-            '잠깐만요 ✋',
-            style: TextStyle(color: AppTheme.textPrimary),
-          ),
-          content: const Text(
-            '타로 카드의 특성상 연속해서 볼 경우\n정확하지 않은 결과가 나올 수 있습니다.',
-            style: TextStyle(color: AppTheme.textSecondary),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                '알겠어요',
-                style: TextStyle(color: AppTheme.gold),
-              ),
-            ),
-          ],
-        ),
-      );
+    final canRead = await _refreshTopicCooldown(topic, showDialogOnLock: true);
+    if (!mounted || !canRead) return;
+
+    if (_cooldownErrorMessage != null) {
+      _showCooldownCheckFailedDialog();
       return;
     }
 
-    final user = _user;
-    if (user == null) return;
-    final isDaily = key == AppConstants.keyLastDailyReading;
+    final isDaily = topic == 'daily';
     final requiredPoints = PaymentService.instance.requiredPointsForTopic(
-      isDaily ? 'daily' : 'romance',
+      topic,
     );
     final canProceed = await PaymentService.instance.ensureEnoughPoints(
       context,
@@ -113,15 +133,104 @@ class _MainScreenState extends State<MainScreen> {
     if (!mounted) return;
     if (!canProceed) return;
 
-    // 쿨타임 기록 후 화면 이동
-    StorageService.instance.setLastReadingTime(key);
-    _refreshCooldowns();
-    Navigator.pushNamed(
+    await Navigator.pushNamed(
       context,
       route,
       arguments: ReadingArgs(
-        topic: isDaily ? 'daily' : 'romance',
+        topic: topic,
         topicLabel: isDaily ? '오늘의 이야기' : '연애 이야기',
+      ),
+    );
+    if (mounted) unawaited(_loadServerCooldowns());
+  }
+
+  Future<bool> _refreshTopicCooldown(
+    String topic, {
+    required bool showDialogOnLock,
+  }) async {
+    final user = _user;
+    if (user == null) return false;
+    setState(() {
+      _cooldownLoading = true;
+      _cooldownErrorMessage = null;
+    });
+    try {
+      final status = await ApiService.instance.getReadingCooltime(
+        user: user,
+        topic: topic,
+      );
+      if (!mounted) return false;
+      setState(() {
+        if (topic == 'romance') {
+          _romanceNextAvailableAt = status.nextAvailableAt;
+        } else {
+          _dailyNextAvailableAt = status.nextAvailableAt;
+        }
+        _cooldownLoading = false;
+      });
+      _tickCooldowns();
+      if (!status.isAvailable) {
+        if (showDialogOnLock) {
+          _showCooldownLockedDialog(status.message);
+        }
+        return false;
+      }
+      return true;
+    } catch (_) {
+      if (!mounted) return false;
+      setState(() {
+        _cooldownLoading = false;
+        _cooldownErrorMessage = '서버 쿨타임을 확인할 수 없습니다.';
+      });
+      _showCooldownCheckFailedDialog();
+      return false;
+    }
+  }
+
+  void _showCooldownLockedDialog(String? message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.backgroundCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '잠깐만요',
+          style: TextStyle(color: AppTheme.textPrimary),
+        ),
+        content: Text(
+          message ?? '타로 카드의 특성상 연속해서 볼 경우\n정확하지 않은 결과가 나올 수 있습니다.',
+          style: const TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('알겠어요', style: TextStyle(color: AppTheme.gold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCooldownCheckFailedDialog() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.backgroundCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '확인이 필요해요',
+          style: TextStyle(color: AppTheme.textPrimary),
+        ),
+        content: const Text(
+          '서버 쿨타임을 확인하지 못했습니다.\n잠시 후 다시 시도해 주세요.',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('알겠어요', style: TextStyle(color: AppTheme.gold)),
+          ),
+        ],
       ),
     );
   }
@@ -155,16 +264,16 @@ class _MainScreenState extends State<MainScreen> {
                   Text(
                     '안녕하세요, $nickname님 👋',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppTheme.textSecondary,
-                        ),
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '오늘은 어떤 이야기가\n궁금하세요?',
                     style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                          fontSize: 28,
-                          height: 1.3,
-                        ),
+                      fontSize: 28,
+                      height: 1.3,
+                    ),
                   ),
                   const SizedBox(height: 48),
 
@@ -173,10 +282,9 @@ class _MainScreenState extends State<MainScreen> {
                     emoji: '🌙',
                     title: '오늘의 이야기',
                     cooldown: _dailyCooldown,
-                    onTap: () => _onReadingTap(
-                      AppConstants.keyLastDailyReading,
-                      '/keyword',
-                    ),
+                    isChecking: _cooldownLoading,
+                    statusError: _cooldownErrorMessage,
+                    onTap: () => _onReadingTap('daily', '/keyword'),
                     formatDuration: _formatDuration,
                   ),
                   const SizedBox(height: 16),
@@ -186,10 +294,9 @@ class _MainScreenState extends State<MainScreen> {
                     emoji: '💕',
                     title: '연애 이야기',
                     cooldown: _romanceCooldown,
-                    onTap: () => _onReadingTap(
-                      AppConstants.keyLastRomanceReading,
-                      '/keyword',
-                    ),
+                    isChecking: _cooldownLoading,
+                    statusError: _cooldownErrorMessage,
+                    onTap: () => _onReadingTap('romance', '/keyword'),
                     formatDuration: _formatDuration,
                   ),
 
@@ -209,6 +316,8 @@ class _ReadingButton extends StatelessWidget {
   final String emoji;
   final String title;
   final Duration? cooldown;
+  final bool isChecking;
+  final String? statusError;
   final VoidCallback onTap;
   final String Function(Duration) formatDuration;
 
@@ -216,11 +325,13 @@ class _ReadingButton extends StatelessWidget {
     required this.emoji,
     required this.title,
     required this.cooldown,
+    required this.isChecking,
+    required this.statusError,
     required this.onTap,
     required this.formatDuration,
   });
 
-  bool get _isActive => cooldown == null;
+  bool get _isActive => cooldown == null && statusError == null;
 
   @override
   Widget build(BuildContext context) {
@@ -236,8 +347,9 @@ class _ReadingButton extends StatelessWidget {
               : AppTheme.backgroundCard.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color:
-                _isActive ? AppTheme.gold.withValues(alpha: 0.6) : AppTheme.divider,
+            color: _isActive
+                ? AppTheme.gold.withValues(alpha: 0.6)
+                : AppTheme.divider,
             width: _isActive ? 1.5 : 1.0,
           ),
           boxShadow: _isActive
@@ -269,7 +381,23 @@ class _ReadingButton extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  _isActive
+                  isChecking
+                      ? const Text(
+                          '서버 상태 확인 중...',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 13,
+                          ),
+                        )
+                      : statusError != null
+                      ? Text(
+                          statusError!,
+                          style: const TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: 13,
+                          ),
+                        )
+                      : _isActive
                       ? const Text(
                           '카드를 뽑을 수 있어요',
                           style: TextStyle(

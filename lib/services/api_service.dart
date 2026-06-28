@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../core/constants.dart';
 import '../core/soul_card.dart';
 import '../models/tarot_card.dart';
 import '../models/user_model.dart';
+import 'storage_service.dart';
 
 /// Railway `lovetype-api` 호출 (경로·번호는 [AppConstants] 주석 참고)
 ///
@@ -108,6 +110,33 @@ class ApiService {
     return get(AppConstants.tarotCooltimeEndpoint, query: query);
   }
 
+  Future<TarotCooltimeStatus> getReadingCooltime({
+    required UserModel user,
+    required String topic,
+  }) async {
+    final categoryKey = topic == 'romance' ? 'love' : 'today';
+    final result = await getTarotCooltime(
+      query: {
+        'app_id': AppConstants.appId,
+        'user_id': _effectiveUserId(user),
+        'topic': topic,
+        'category_key': categoryKey,
+      },
+    );
+    final status = TarotCooltimeStatus.fromJson(result);
+    if (kDebugMode) {
+      final data = result['data'];
+      final keys = data is Map<String, dynamic> ? data.keys : result.keys;
+      debugPrint(
+        '[cooltime] topic=$topic keys=${keys.join(',')} '
+        'available=${status.isAvailable} '
+        'next=${status.nextAvailableAt?.toIso8601String()} '
+        'remaining=${status.remaining()?.inSeconds}',
+      );
+    }
+    return status;
+  }
+
   /// GET /api/v1/tarot/history
   Future<Map<String, dynamic>> getTarotHistory({
     Map<String, String>? query,
@@ -123,17 +152,22 @@ class ApiService {
     required List<String> tags,
     required List<TarotCard> cards,
   }) async {
-    final cardLines = cards.asMap().entries.map((e) {
-      final pos = ['과거', '현재', '미래'][e.key];
-      final dir = e.value.isReversed ? '역방향' : '정방향';
-      return '${e.key + 1}번 카드 $dir (${e.value.nameKo}): $pos의 이야기';
-    }).join('\n');
+    final cardLines = cards
+        .asMap()
+        .entries
+        .map((e) {
+          final pos = ['과거', '현재', '미래'][e.key];
+          final dir = e.value.isReversed ? '역방향' : '정방향';
+          return '${e.key + 1}번 카드 $dir (${e.value.nameKo}): $pos의 이야기';
+        })
+        .join('\n');
 
     final genderLabel = user.gender == 'female' ? '여성' : '남성';
     final soulDesc = soulCardDescriptions[user.soulCardNumber] ?? '';
     final tagStr = tags.map((t) => '#$t').join(' ');
 
-    final prompt = '''
+    final prompt =
+        '''
 소울카드인 "$genderLabel" 주인공의 "$topicLabel" 이야기야.
 "$tagStr"을 기본 주제로 소설 톤의 짧은 이야기를 써줘.
 
@@ -176,14 +210,121 @@ MBTI는 ${user.mbti}야.
     return null;
   }
 
+  String _effectiveUserId(UserModel user) {
+    return StorageService.instance.effectiveUserIdForHistory(user);
+  }
+
   Map<String, dynamic> _parse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     }
-    throw ApiException(
-      statusCode: response.statusCode,
-      message: response.body,
+    throw ApiException(statusCode: response.statusCode, message: response.body);
+  }
+}
+
+class TarotCooltimeStatus {
+  final bool isAvailable;
+  final DateTime? nextAvailableAt;
+  final String? message;
+
+  const TarotCooltimeStatus({
+    required this.isAvailable,
+    this.nextAvailableAt,
+    this.message,
+  });
+
+  Duration? remaining([DateTime? now]) {
+    final next = nextAvailableAt;
+    if (next == null) return null;
+    final diff = next.toLocal().difference(now ?? DateTime.now());
+    return diff.isNegative || diff == Duration.zero ? null : diff;
+  }
+
+  factory TarotCooltimeStatus.fromJson(Map<String, dynamic> json) {
+    final data = json['data'] is Map<String, dynamic>
+        ? json['data'] as Map<String, dynamic>
+        : json;
+
+    final remainingSeconds =
+        _numValue(data, const ['remaining_seconds', 'remainingSeconds']) ??
+        _numValue(data, const ['cooldown_seconds', 'cooldownSeconds']) ??
+        _numValue(data, const ['remaining']);
+    final nextAvailableAt =
+        _dateValue(data, const [
+          'next_available_at',
+          'nextAvailableAt',
+          'available_at',
+          'availableAt',
+          'unlock_at',
+          'unlockAt',
+        ]) ??
+        (remainingSeconds == null
+            ? null
+            : DateTime.now().add(Duration(seconds: remainingSeconds.ceil())));
+
+    final explicitAvailable = _boolValue(data, const [
+      'is_available',
+      'isAvailable',
+      'available',
+      'can_read',
+      'canRead',
+    ]);
+    final isAvailable =
+        explicitAvailable ??
+        nextAvailableAt == null || nextAvailableAt.isBefore(DateTime.now());
+
+    return TarotCooltimeStatus(
+      isAvailable: isAvailable,
+      nextAvailableAt: isAvailable ? null : nextAvailableAt,
+      message: _stringValue(data, const [
+        'message',
+        'reason',
+        'reason_message',
+      ]),
     );
+  }
+
+  static bool? _boolValue(Map<String, dynamic> data, List<String> keys) {
+    for (final key in keys) {
+      final value = data[key];
+      if (value is bool) return value;
+      if (value is String) {
+        final normalized = value.toLowerCase();
+        if (normalized == 'true') return true;
+        if (normalized == 'false') return false;
+      }
+    }
+    return null;
+  }
+
+  static num? _numValue(Map<String, dynamic> data, List<String> keys) {
+    for (final key in keys) {
+      final value = data[key];
+      if (value is num) return value;
+      if (value is String) {
+        final parsed = num.tryParse(value);
+        if (parsed != null) return parsed;
+      }
+    }
+    return null;
+  }
+
+  static DateTime? _dateValue(Map<String, dynamic> data, List<String> keys) {
+    for (final key in keys) {
+      final value = data[key]?.toString();
+      if (value == null || value.isEmpty) continue;
+      final parsed = DateTime.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+    return null;
+  }
+
+  static String? _stringValue(Map<String, dynamic> data, List<String> keys) {
+    for (final key in keys) {
+      final value = data[key]?.toString();
+      if (value != null && value.isNotEmpty) return value;
+    }
+    return null;
   }
 }
 

@@ -4,7 +4,7 @@ class AppConstants {
 
   // ── 앱 식별자 ──────────────────────────────────────────────
   static const String appId = 'lovetype-tarot';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = '0.1.0';
 
   // ── API ───────────────────────────────────────────────────
   static const String baseUrl = 'https://lovetype-api.railway.app';
@@ -58,11 +58,6 @@ class AppConstants {
 
   /// v4.0: 서버 전송 실패 시 임시 큐 (JSON 배열)
   static const String keyHistoryPending = 'history_pending';
-
-  // ── 쿨타임 저장 키 ───────────────────────────────────────
-  static const String keyLastDailyReading = 'last_daily_reading';
-  static const String keyLastRomanceReading = 'last_romance_reading';
-  static const Duration readingCooldown = Duration(hours: 1);
 
   // ── mock 데이터 ───────────────────────────────────────────
   static const int mockCashAmount = 0;

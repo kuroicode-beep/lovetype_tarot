@@ -13,7 +13,7 @@ import 'fcm_background.dart';
 import 'push_service.dart';
 import 'storage_service.dart';
 
-/// v5.1: 매일 오전 9시(서울) 로컬 알림 + 쿨타임 1시간 후 알림 + FCM 등록
+/// v5.1: 매일 오전 9시(서울) 로컬 알림 + 서버 쿨타임 해제 알림 + FCM 등록
 class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
@@ -194,15 +194,19 @@ class NotificationService {
     );
   }
 
-  /// 리딩 완료 후 1시간 뒤 쿨타임 해제 알림 (v5.0)
-  Future<void> scheduleCooldownUnlock({required String topic}) async {
+  /// 리딩 완료 후 서버가 알려준 쿨타임 해제 시각에 알림
+  Future<void> scheduleCooldownUnlock({
+    required String topic,
+    required Duration delay,
+  }) async {
     if (!StorageService.instance.pushEnabled) return;
+    if (delay.isNegative || delay == Duration.zero) return;
 
     final id = topic == 'romance' ? _idCooldownRomance : _idCooldownDaily;
     await _local.cancel(id: id);
 
     final location = tz.getLocation('Asia/Seoul');
-    final when = tz.TZDateTime.now(location).add(const Duration(hours: 1));
+    final when = tz.TZDateTime.now(location).add(delay);
 
     await _local.zonedSchedule(
       id: id,

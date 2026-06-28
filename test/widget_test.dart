@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lovetype_tarot/services/api_service.dart';
 import 'package:lovetype_tarot/core/soul_card.dart';
 
 void main() {
@@ -31,13 +32,16 @@ void main() {
 
     test('결과는 항상 1~9 사이', () {
       final testDates = [
-        '19700101', '19851225', '20010901',
-        '19990909', '20101010', '19650630',
+        '19700101',
+        '19851225',
+        '20010901',
+        '19990909',
+        '20101010',
+        '19650630',
       ];
       for (final date in testDates) {
         final result = calcSoulCard(date);
-        expect(result, inInclusiveRange(1, 9),
-            reason: '$date → $result 범위 초과');
+        expect(result, inInclusiveRange(1, 9), reason: '$date → $result 범위 초과');
       }
     });
 
@@ -66,25 +70,54 @@ void main() {
 
   group('soulCardImagePath', () {
     test('풀샷 에셋 경로 반환', () {
-      expect(
-        soulCardImagePath(1),
-        'asset/soul_cards/soul_01_magician.png',
-      );
-      expect(
-        soulCardImagePath(9),
-        'asset/soul_cards/soul_09_hermit.png',
-      );
+      expect(soulCardImagePath(1), 'asset/soul_cards/soul_01_magician.png');
+      expect(soulCardImagePath(9), 'asset/soul_cards/soul_09_hermit.png');
     });
 
     test('아바타 에셋 경로 반환', () {
+      expect(soulCardAvatarPath(1), 'asset/soul_cards/avatar_01_magician.png');
+      expect(soulCardAvatarPath(9), 'asset/soul_cards/avatar_09_hermit.png');
+    });
+  });
+
+  group('TarotCooltimeStatus', () {
+    test('사용 가능한 서버 응답을 파싱한다', () {
+      final status = TarotCooltimeStatus.fromJson({
+        'success': true,
+        'data': {'is_available': true, 'next_available_at': null},
+      });
+
+      expect(status.isAvailable, true);
+      expect(status.nextAvailableAt, isNull);
+      expect(status.remaining(), isNull);
+    });
+
+    test('잠금 응답의 다음 가능 시각과 메시지를 파싱한다', () {
+      final status = TarotCooltimeStatus.fromJson({
+        'data': {
+          'is_available': false,
+          'message': '아직 쿨타임 중입니다.',
+          'next_available_at': '2099-03-12T04:30:00Z',
+        },
+      });
+
+      expect(status.isAvailable, false);
+      expect(status.nextAvailableAt, DateTime.parse('2099-03-12T04:30:00Z'));
+      expect(status.message, '아직 쿨타임 중입니다.');
       expect(
-        soulCardAvatarPath(1),
-        'asset/soul_cards/avatar_01_magician.png',
+        status.remaining(DateTime.parse('2099-03-12T04:00:00Z')),
+        const Duration(minutes: 30),
       );
-      expect(
-        soulCardAvatarPath(9),
-        'asset/soul_cards/avatar_09_hermit.png',
-      );
+    });
+
+    test('remaining_seconds만 있어도 잠금 상태를 계산한다', () {
+      final status = TarotCooltimeStatus.fromJson({
+        'data': {'available': false, 'remaining_seconds': 90},
+      });
+
+      expect(status.isAvailable, false);
+      expect(status.nextAvailableAt, isNotNull);
+      expect(status.remaining(), isNotNull);
     });
   });
 }
