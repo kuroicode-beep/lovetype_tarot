@@ -52,20 +52,45 @@ LoveType Tarot은 2026년 3월 MVP 기획/스펙 문서에서 시작해 Flutter 
 - 허브, PRD, 구현 스펙, 아키텍처, 개발진행 히스토리, 완료보고서 인덱스 구성
 - Outline 게시 및 readback 검증
 
+### 2026-06-28 스토어 등록 직전 준비
+
+- 인앱결제 직접충전 fallback 제거
+- IAP 상품 ID 중앙화 및 회귀 테스트 추가
+- Android Billing permission 명시
+- Android release signing 설정과 debug key fallback 차단
+- Android release keystore 로컬 생성 및 Git 제외 확인
+- 런타임 카드/배경 asset WebP 최적화
+- 스토어 등록 문안, 개인정보처리방침 초안, 콘솔 런북, IAP QA 문서 작성
+- release AAB 생성
+- 로컬 readiness verifier 추가
+- GitHub Actions readiness workflow 추가 및 첫 실행 성공
+
+검증:
+- `flutter analyze` 통과
+- `flutter test` 통과
+- `flutter build apk --debug` 통과
+- `flutter build appbundle --release` 통과
+- `.\tools\verify_store_readiness.ps1` 통과
+- GitHub Actions `Store Readiness` 통과
+
 ## 03. 현재 운영 상태
 
 - 앱 버전: `0.1.0+1`
 - 코드 분석: 통과
 - 단위 테스트: 통과
 - Android debug APK: 빌드 성공
-- 서버 쿨타임: 앱 기준으로 통합 완료, 실제 운영 응답 QA 필요
+- Android release AAB: 빌드 성공
+- 서버 쿨타임: 앱 기준으로 통합 완료
+- 결제: 앱 IAP 플로우와 서버 영수증 전달 계약 준비 완료, 실제 결제 가능 여부는 스토어 상품 등록과 서버 credential 연결 후 검증 필요
+- CI: GitHub Actions `Store Readiness` 첫 실행 성공
 
 ## 04. 남은 확인 포인트
 
-- Railway `tarot/cooltime` 실응답과 앱 파서 필드 정합성
-- 포인트 차감 실패/재시도 UX
-- 릴리즈 signing config
-- APK/AAB 용량 최적화
-- API Base 환경 분리
-- 주요 화면 widget/golden 테스트 보강
-
+- Google Play Console 또는 App Store Connect 앱 생성
+- 공개 개인정보처리방침 URL 게시
+- 운영자명, 고객지원 이메일, 개인정보 보호 책임자 확정
+- 인앱 상품 및 구독 상품 등록
+- 라이선스 테스트 계정 또는 Sandbox tester 등록
+- 서버 스토어 영수증 검증 credential 연결
+- 실제 테스트 결제와 구독 복원 검증
+- API Base 환경 분리와 주요 화면 widget/golden 테스트 보강
