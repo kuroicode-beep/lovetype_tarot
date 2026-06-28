@@ -44,6 +44,7 @@ flutter build appbundle --release
 | Privacy draft | `docs/privacy-policy-ko.md` |
 | Store listing draft | `docs/store-listing-draft-ko.md` |
 | Readiness verifier | `tools/verify_store_readiness.ps1` |
+| CI readiness workflow | `.github/workflows/store-readiness.yml` |
 
 ## 04. 외부 상태가 필요한 미완료 항목
 

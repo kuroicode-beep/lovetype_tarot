@@ -76,3 +76,10 @@ Run the store readiness gate before uploading a build:
 The script fails on local release blockers and warns for items that require
 store-console or operator information, such as the public privacy policy URL and
 store test purchases.
+
+## CI
+
+GitHub Actions runs `.github/workflows/store-readiness.yml` on `master`, pull
+requests, and manual dispatch. CI verifies dependencies, analysis, tests, the
+store readiness static gate, and a debug APK smoke build. Release AAB signing
+stays local because the upload keystore is intentionally not committed.
