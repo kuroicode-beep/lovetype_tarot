@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lovetype_tarot/services/api_service.dart';
 import 'package:lovetype_tarot/core/soul_card.dart';
+import 'package:lovetype_tarot/services/iap_service.dart';
 
 void main() {
   group('calcSoulCard', () {
@@ -118,6 +119,40 @@ void main() {
       expect(status.isAvailable, false);
       expect(status.nextAvailableAt, isNotNull);
       expect(status.remaining(), isNotNull);
+    });
+  });
+
+  group('IapService products', () {
+    test('스토어 등록용 상품 ID 목록이 고정되어 있다', () {
+      expect(
+        IapService.productIds,
+        {
+          'tarot_1',
+          'tarot_6',
+          'tarot_10p',
+          'tarot_13',
+          'tarot_40',
+          'tarot_sub',
+        },
+      );
+    });
+
+    test('상품 타입과 지급 포인트가 서버 계약과 일치한다', () {
+      expect(IapService.products['tarot_1']?.credits, 1);
+      expect(IapService.products['tarot_6']?.credits, 6);
+      expect(IapService.products['tarot_10p']?.credits, 10);
+      expect(IapService.products['tarot_13']?.credits, 13);
+      expect(IapService.products['tarot_40']?.credits, 40);
+      expect(IapService.products['tarot_sub']?.credits, 0);
+
+      expect(
+        IapService.products['tarot_10p']?.type,
+        IapProductType.consumable,
+      );
+      expect(
+        IapService.products['tarot_sub']?.type,
+        IapProductType.subscription,
+      );
     });
   });
 }
