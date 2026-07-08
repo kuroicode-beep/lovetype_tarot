@@ -60,11 +60,15 @@ Flutter 앱, 로컬 저장소, Railway API, Firebase/FCM, IAP, Outline 문서 �
 - 로컬 readiness verifier 추가
 - GitHub Actions readiness workflow 통과
 
+2026-07-08 완료:
+
+- 운영자명, 고객지원 이메일, 개인정보 보호 책임자 확정 (`docs/privacy-policy-ko.md` 09 참조)
+- 개인정보처리방침 Ghost 블로그 draft 등록 (발행 후 URL: `https://ghost-production-0ec2.up.railway.app/lovetype-tarot-gaeinjeongboceoribangcim/`)
+
 남은 외부 작업:
 
+- 개인정보처리방침 Ghost draft publish 승인
 - Google Play Console 또는 App Store Connect 앱 생성
-- 공개 개인정보처리방침 URL 게시
-- 운영자명, 고객지원 이메일, 개인정보 보호 책임자 확정
 - 인앱 상품 및 구독 상품 등록
 - 라이선스 테스트 계정 또는 Sandbox tester 등록
 - 서버 스토어 영수증 검증 credential 연결

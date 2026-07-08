@@ -36,8 +36,7 @@
 아래 항목은 로컬 저장소에서 임의로 완료 처리할 수 없고, 스토어 계정 또는 운영자 정보가 필요하다.
 
 - Google Play Console 또는 App Store Connect 앱 생성
-- 공개 개인정보처리방침 URL 게시
-- 운영자명, 고객지원 이메일, 개인정보 보호 책임자 확정
+- 개인정보처리방침 Ghost draft publish 승인 (2026-07-08 draft 등록, 운영자 정보 확정 완료)
 - 인앱 상품 및 구독 상품 등록
 - 라이선스 테스트 계정 또는 Sandbox tester 등록
 - 서버 스토어 영수증 검증 credential 연결

@@ -73,10 +73,24 @@
 
 개인정보처리방침은 `docs/privacy-policy-ko.md`의 운영자 정보 항목을 채운 뒤 공개 URL로 게시한다.
 
+운영자 정보 (2026-07-08 확정):
+
+| 항목 | 값 |
+|---|---|
+| 운영자명 | 인블루 (SVIL, Singularity Visual Intelligence Lab) |
+| 고객지원 이메일 | kuroicode@gmail.com |
+| 개인정보 보호 책임자 | 인블루 |
+
+개인정보처리방침 게시 상태 (2026-07-08):
+
+- Ghost 블로그에 draft로 등록 완료 (post id `6a4df4a528e44400013826a1`)
+- 발행 후 공개 URL: `https://ghost-production-0ec2.up.railway.app/lovetype-tarot-gaeinjeongboceoribangcim/`
+- Ghost 관리자에서 draft를 publish하면 위 URL이 활성화되며, 이 URL을 Play Console 개인정보처리방침 항목에 입력한다.
+
 ## 07. 실제 제출 전 차단 항목
 
-- 운영자명, 고객지원 이메일, 개인정보 보호 책임자 미확정
-- 개인정보처리방침 공개 URL 미확정
+- ~~운영자명, 고객지원 이메일, 개인정보 보호 책임자 미확정~~ → 2026-07-08 확정 (06 참조)
+- 개인정보처리방침 공개 URL: Ghost draft 등록 완료, publish만 남음
 - Play/App Store 상품 ID 미등록
 - 서버 영수증 검증 credential 미연결
 - 내부 테스트 트랙 또는 Sandbox 결제 미검증

@@ -87,8 +87,7 @@ LoveType Tarot은 2026년 3월 MVP 기획/스펙 문서에서 시작해 Flutter 
 ## 04. 남은 확인 포인트
 
 - Google Play Console 또는 App Store Connect 앱 생성
-- 공개 개인정보처리방침 URL 게시
-- 운영자명, 고객지원 이메일, 개인정보 보호 책임자 확정
+- 개인정보처리방침 Ghost draft publish 승인 (2026-07-08 draft 등록, 운영자 정보 확정 완료)
 - 인앱 상품 및 구독 상품 등록
 - 라이선스 테스트 계정 또는 Sandbox tester 등록
 - 서버 스토어 영수증 검증 credential 연결

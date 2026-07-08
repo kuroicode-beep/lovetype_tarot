@@ -51,12 +51,20 @@ flutter build appbundle --release
 다음 항목은 로컬 저장소에서 임의로 완료 처리할 수 없다.
 
 - Google Play Console 또는 App Store Connect 앱 생성
-- 공개 개인정보처리방침 URL 게시
-- 운영자명, 고객지원 이메일, 개인정보 보호 책임자 확정
 - 인앱 상품 및 구독 상품 등록
 - 라이선스 테스트 계정 또는 Sandbox tester 등록
 - 서버 스토어 영수증 검증 credential 연결
 - 실제 테스트 결제와 구독 복원 검증
+
+### 2026-07-08 진행분
+
+- 운영자명, 고객지원 이메일, 개인정보 보호 책임자 확정: `docs/privacy-policy-ko.md` 09 문의 항목 기입 완료
+- 개인정보처리방침 Ghost 블로그 draft 등록 완료 (post id `6a4df4a528e44400013826a1`)
+  - 발행 후 URL: `https://ghost-production-0ec2.up.railway.app/lovetype-tarot-gaeinjeongboceoribangcim/`
+  - Ghost 관리자에서 publish 승인만 남음 (운영자 이메일 공개 게시 최종 확인 포함)
+- Play Console 브라우저 등록 시도: Chrome 확장 미연결로 보류
+
+이번 진행분은 문서 변경만 포함하므로 코드 검증 명령 재실행 대상이 아니다.
 
 ## 05. 완료 판정
 
