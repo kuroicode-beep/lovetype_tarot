@@ -62,7 +62,17 @@ flutter build appbundle --release
 - 개인정보처리방침 Ghost 블로그 draft 등록 완료 (post id `6a4df4a528e44400013826a1`)
   - 발행 후 URL: `https://ghost-production-0ec2.up.railway.app/lovetype-tarot-gaeinjeongboceoribangcim/`
   - Ghost 관리자에서 publish 승인만 남음 (운영자 이메일 공개 게시 최종 확인 포함)
-- Play Console 브라우저 등록 시도: Chrome 확장 미연결로 보류
+- 개인정보처리방침 발행 완료 (2026-07-08 16:07 KST): 공개 URL `https://ghost-production-0ec2.up.railway.app/lovetype-tarot-gaeinjeongboceoribangcim/`
+
+### 2026-07-08 차단 발견: Google Play 개발자 계정 상태
+
+Play Console 접속 결과 개발자 계정 `Lee Du Yeon`(ID 7770188165020085052)이 다음 상태다.
+
+- 2024-12-17 계정 확인(본인 인증) 기한 초과로 개발자 프로필과 모든 앱이 Google Play에서 삭제됨
+- 계정 상태: 제한된 개발자 계정 — 새 앱 게시 불가
+- 해결 경로: Play Console의 "개발자 계정 인증" 절차 완료 (계정 유형 확인 → 결제 프로필 연결 → 계정 정보 제공 → 공개/비공개 세부정보 제공)
+- 본인 인증(신분증, 결제 프로필)은 계정 소유자가 직접 수행해야 함
+- 인증 완료 전에는 앱 생성/AAB 업로드/인앱 상품 등록이 모두 무의미하므로 스토어 등록 작업은 계정 인증 완료가 선행 조건
 
 이번 진행분은 문서 변경만 포함하므로 코드 검증 명령 재실행 대상이 아니다.
 
