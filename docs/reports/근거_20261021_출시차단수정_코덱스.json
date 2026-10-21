@@ -36,5 +36,19 @@
     "Google/Play 설정 및 실기기 검증 전 검증용 빌드",
     "서버 PR은 main 병합 및 재기동 전 검토 상태",
     "라이선스 포함 및 사본 해시 재조회"
-  ]
+  ],
+  "worktreeRecoveryCommit": "c0a48a1",
+  "sacHandoffReadbackVerified": true,
+  "appRemoteMatch": true,
+  "appRemoteCiRun": 39568428114,
+  "worktreeRegisteredCount": 1,
+  "backendRemoteCiRun": 39568286317,
+  "appRemoteCi": "success",
+  "backendRemoteCi": "success",
+  "outlineHandoffId": "94c7ac1a-06a2-4525-8b19-d4f6f3d7be2c",
+  "outlineHandoffReadbackVerified": true,
+  "outlineProjectReadbackVerified": true,
+  "worktreeResidualCleanup": "blocked_by_automatic_approval",
+  "powershellBuildScriptSyntaxVerified": true,
+  "appCodeCommit": "9e3e172c9b56216d00c5d49d9c40ac7c2e6e9421"
 }
