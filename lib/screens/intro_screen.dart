@@ -1,9 +1,50 @@
 import 'package:flutter/material.dart';
 import '../core/app_assets.dart';
 import '../core/theme.dart';
+import '../core/constants.dart';
+import '../services/auth_service.dart';
+import '../services/storage_service.dart';
 
-class IntroScreen extends StatelessWidget {
+class IntroScreen extends StatefulWidget {
   const IntroScreen({super.key});
+  @override
+  State<IntroScreen> createState() => _IntroScreenState();
+}
+
+class _IntroScreenState extends State<IntroScreen> {
+  bool _busy = false;
+  String? _error;
+  @override
+  void initState() {
+    super.initState();
+    _login(silently: true);
+  }
+
+  // Google와 서버 확인을 마친 계정만 앱 흐름에 진입한다.
+  Future<void> _login({bool silently = false}) async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final ok = await AuthService.instance.signIn(silently: silently);
+      if (ok && mounted) {
+        Navigator.pushReplacementNamed(
+          context,
+          StorageService.instance.loadUser() == null ? '/info-input' : '/main',
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _error = '로그인을 완료하지 못했어요. 연결과 계정 설정을 확인한 뒤 다시 시도할 수 있어요.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,38 +80,37 @@ class IntroScreen extends StatelessWidget {
                   const Text('🎴', style: TextStyle(fontSize: 64)),
                   const SizedBox(height: 16),
                   Text(
-                    'LoveType-Tarot',
+                    'LoveType-Tarot v${AppConstants.appVersion}',
                     style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                          color: AppTheme.gold,
-                          letterSpacing: 1.5,
-                        ),
+                      color: AppTheme.gold,
+                      letterSpacing: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     '당신의 소울이 이야기를 시작합니다',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppTheme.lavender,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyLarge?.copyWith(color: AppTheme.lavender),
                     textAlign: TextAlign.center,
                   ),
                   const Spacer(flex: 2),
                   // Google 로그인 버튼
                   _IntroButton(
                     icon: Icons.g_mobiledata,
-                    label: 'Google로 시작하기',
+                    label: _busy ? '로그인 확인 중' : 'Google로 시작하기',
                     isPrimary: true,
-                    onTap: () =>
-                        Navigator.pushNamed(context, '/info-input'),
+                    onTap: () => _login(),
                   ),
                   const SizedBox(height: 12),
-                  // 전화번호 버튼
-                  _IntroButton(
-                    icon: Icons.phone_outlined,
-                    label: '전화번호로 시작하기',
-                    isPrimary: false,
-                    onTap: () =>
-                        Navigator.pushNamed(context, '/info-input'),
-                  ),
+                  if (_error != null)
+                    Text(
+                      _error!,
+                      style: const TextStyle(
+                        color: AppTheme.error,
+                        fontSize: 14,
+                      ),
+                    ),
                   const SizedBox(height: 48),
                 ],
               ),
@@ -93,10 +133,7 @@ class _BackgroundImage extends StatelessWidget {
           gradient: RadialGradient(
             center: Alignment.topCenter,
             radius: 1.2,
-            colors: [
-              Color(0xFF2D1B4E),
-              Color(0xFF1A1028),
-            ],
+            colors: [Color(0xFF2D1B4E), Color(0xFF1A1028)],
           ),
         ),
         child: Stack(
@@ -113,8 +150,9 @@ class _BackgroundImage extends StatelessWidget {
                   width: size,
                   height: size,
                   decoration: BoxDecoration(
-                    color: AppTheme.lavender
-                        .withValues(alpha: 0.3 + (i % 5) * 0.1),
+                    color: AppTheme.lavender.withValues(
+                      alpha: 0.3 + (i % 5) * 0.1,
+                    ),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -157,8 +195,8 @@ class _IntroButton extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.gold,
-                foregroundColor: AppTheme.backgroundDark,
+                backgroundColor: AppTheme.primarySurface,
+                foregroundColor: AppTheme.textPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/constants.dart';
@@ -110,9 +111,51 @@ class StorageService {
     }
   }
 
-  /// `user_id` — OAuth 미연동 시 로컬 식별자
-  String effectiveUserIdForHistory(UserModel user) =>
-      googleUserId ?? 'local_${user.nickname}';
+  /// 서버에서 검증된 Google 사용자만 식별자로 사용한다.
+  String effectiveUserIdForHistory(UserModel user) {
+    final id = googleUserId;
+    if (id == null || id.isEmpty) throw StateError('로그인이 필요해요.');
+    return id;
+  }
+
+  /// 계정별 표시 캐시를 해제하되 재전송 큐는 보존한다.
+  Future<void> clearAccountCache() async {
+    for (final key in [
+      AppConstants.keyGoogleUserId,
+      AppConstants.keyNickname,
+      AppConstants.keyGender,
+      AppConstants.keyMbti,
+      AppConstants.keyBirthdate,
+      AppConstants.keySoulCardNumber,
+      AppConstants.keyPointBalance,
+      AppConstants.keyIsSubscribed,
+      AppConstants.keySubscriptionExpiresAt,
+      AppConstants.keyLastRegisteredFcmToken,
+    ]) {
+      await _p.remove(key);
+    }
+  }
+
+  Future<void> _queueTail = Future<void>.value();
+
+  /// 큐의 읽기·수정·쓰기를 직렬화한다.
+  Future<void> _mutateQueue(void Function(List<Map<String, dynamic>>) change) {
+    final next = _queueTail.then((_) async {
+      final entries = getPendingHistoryEntries();
+      change(entries);
+      await setPendingHistoryEntries(entries);
+    });
+    _queueTail = next.catchError((Object _) {});
+    return next;
+  }
+
+  /// 동일한 리딩의 자동저장·수동저장 재시도를 같은 키로 묶는다.
+  static String historyKey(Map<String, dynamic> body) =>
+      body['client_reading_id']?.toString() ??
+      (body['reading_id'] != null
+          ? '${body['user_id']}:${body['reading_id']}'
+          : null) ??
+      sha256.convert(utf8.encode(jsonEncode(body))).toString();
 
   // ── 히스토리 전송 대기 큐 (v4.0 history_pending) ─────────
   List<Map<String, dynamic>> getPendingHistoryEntries() {
@@ -139,9 +182,17 @@ class StorageService {
   }
 
   Future<void> enqueuePendingHistory(Map<String, dynamic> body) async {
-    final q = getPendingHistoryEntries()..add(body);
-    await setPendingHistoryEntries(q);
+    await _mutateQueue((entries) {
+      if (!entries.any((entry) => historyKey(entry) == historyKey(body))) {
+        entries.add(body);
+      }
+    });
   }
+
+  Future<void> removePendingHistory(Map<String, dynamic> body) => _mutateQueue(
+    (entries) =>
+        entries.removeWhere((entry) => historyKey(entry) == historyKey(body)),
+  );
 
   // ── 초기화 ────────────────────────────────────────────────
   Future<void> clearAll() => _p.clear();

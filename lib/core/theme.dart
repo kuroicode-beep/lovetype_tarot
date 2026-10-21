@@ -5,15 +5,16 @@ class AppTheme {
   AppTheme._();
 
   // ── 색상 ──────────────────────────────────────────────────
-  static const Color backgroundDark = Color(0xFF1A1028);
-  static const Color backgroundCard = Color(0xFF2A1F3D);
-  static const Color gold = Color(0xFFC9A84C);
-  static const Color goldLight = Color(0xFFE4C878);
+  static const Color backgroundDark = Color(0xFF0D0D12);
+  static const Color backgroundCard = Color(0xFF16161D);
+  static const Color gold = Color(0xFF7EC8FF);
+  static const Color goldLight = Color(0xFFB3DDFF);
   static const Color lavender = Color(0xFFB39DDB);
   static const Color lavenderDark = Color(0xFF7E57C2);
   static const Color textPrimary = Color(0xFFF0E6FF);
-  static const Color textSecondary = Color(0xFF9E8FBB);
-  static const Color textMuted = Color(0xFF6B5D80);
+  static const Color textSecondary = Color(0xFFD8D8E4);
+  static const Color textMuted = Color(0xFFC9C9D4);
+  static const Color primarySurface = Color(0xFF303038);
   static const Color divider = Color(0xFF3A2850);
   static const Color error = Color(0xFFCF6679);
 
@@ -47,82 +48,84 @@ class AppTheme {
 
   // ── 테마 오브젝트 ──────────────────────────────────────────
   static ThemeData get darkTheme => ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: backgroundDark,
-        colorScheme: const ColorScheme.dark(
-          primary: gold,
-          secondary: lavender,
-          surface: backgroundCard,
-          error: error,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: backgroundDark,
-          elevation: 0,
-          iconTheme: IconThemeData(color: gold),
-          titleTextStyle: TextStyle(
-            color: textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            foregroundColor: gold,
-            side: const BorderSide(color: gold, width: 1.5),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-          ),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(foregroundColor: lavender),
-        ),
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(
-            color: textPrimary,
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-          ),
-          headlineMedium: TextStyle(
-            color: textPrimary,
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-          ),
-          titleMedium: TextStyle(color: textPrimary, fontSize: 16),
-          bodyLarge: TextStyle(color: textSecondary, fontSize: 15),
-          bodyMedium: TextStyle(color: textSecondary, fontSize: 13),
-          labelSmall: TextStyle(color: textMuted, fontSize: 11),
-        ),
-        dividerColor: divider,
-        useMaterial3: true,
-      );
+    brightness: Brightness.dark,
+    fontFamily: 'LINESeedKR',
+    fontFamilyFallback: const ['Malgun Gothic', 'Segoe UI'],
+    scaffoldBackgroundColor: backgroundDark,
+    colorScheme: const ColorScheme.dark(
+      primary: gold,
+      secondary: lavender,
+      surface: backgroundCard,
+      error: error,
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: backgroundDark,
+      elevation: 0,
+      iconTheme: IconThemeData(color: gold),
+      titleTextStyle: TextStyle(
+        color: textPrimary,
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.transparent,
+        foregroundColor: gold,
+        side: const BorderSide(color: gold, width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(foregroundColor: lavender),
+    ),
+    textTheme: const TextTheme(
+      displayLarge: TextStyle(
+        color: textPrimary,
+        fontSize: 32,
+        fontWeight: FontWeight.bold,
+      ),
+      headlineMedium: TextStyle(
+        color: textPrimary,
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+      ),
+      titleMedium: TextStyle(color: textPrimary, fontSize: 16),
+      bodyLarge: TextStyle(color: textSecondary, fontSize: 18),
+      bodyMedium: TextStyle(color: textSecondary, fontSize: 13),
+      labelSmall: TextStyle(color: textMuted, fontSize: 12),
+    ),
+    dividerColor: divider,
+    useMaterial3: true,
+  );
 
   static ThemeData get highContrastTheme => ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: hcBackground,
-        colorScheme: const ColorScheme.dark(
-          primary: hcGold,
-          secondary: hcAccent,
-          surface: Color(0xFF111111),
-        ),
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(
-            color: hcText,
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-          ),
-          headlineMedium: TextStyle(
-            color: hcText,
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-          ),
-          titleMedium: TextStyle(color: hcText, fontSize: 16),
-          bodyLarge: TextStyle(color: hcText, fontSize: 15),
-          bodyMedium: TextStyle(color: hcText, fontSize: 13),
-          labelSmall: TextStyle(color: hcText, fontSize: 11),
-        ),
-        useMaterial3: true,
-      );
+    brightness: Brightness.dark,
+    fontFamily: 'LINESeedKR',
+    fontFamilyFallback: const ['Malgun Gothic', 'Segoe UI'],
+    scaffoldBackgroundColor: hcBackground,
+    colorScheme: const ColorScheme.dark(
+      primary: hcGold,
+      secondary: hcAccent,
+      surface: Color(0xFF111111),
+    ),
+    textTheme: const TextTheme(
+      displayLarge: TextStyle(
+        color: hcText,
+        fontSize: 32,
+        fontWeight: FontWeight.bold,
+      ),
+      headlineMedium: TextStyle(
+        color: hcText,
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+      ),
+      titleMedium: TextStyle(color: hcText, fontSize: 16),
+      bodyLarge: TextStyle(color: hcText, fontSize: 18),
+      bodyMedium: TextStyle(color: hcText, fontSize: 13),
+      labelSmall: TextStyle(color: hcText, fontSize: 12),
+    ),
+    useMaterial3: true,
+  );
 }

@@ -13,8 +13,16 @@ class KeywordScreen extends StatefulWidget {
 
 class _KeywordScreenState extends State<KeywordScreen> {
   static const _allTags = [
-    '#재회', '#만남', '#이별', '#썸', '#짝사랑', '#현재연애',
-    '#고백', '#권태기', '#외로움', '#새출발',
+    '#재회',
+    '#만남',
+    '#이별',
+    '#썸',
+    '#짝사랑',
+    '#현재연애',
+    '#고백',
+    '#권태기',
+    '#외로움',
+    '#새출발',
   ];
 
   final Set<String> _selected = {};
@@ -48,8 +56,11 @@ class _KeywordScreenState extends State<KeywordScreen> {
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios,
-                            color: AppTheme.textSecondary, size: 20),
+                        icon: const Icon(
+                          Icons.arrow_back_ios,
+                          color: AppTheme.textSecondary,
+                          size: 20,
+                        ),
                         onPressed: () => Navigator.pop(context),
                         padding: EdgeInsets.zero,
                       ),
@@ -68,9 +79,9 @@ class _KeywordScreenState extends State<KeywordScreen> {
                   Text(
                     '어떤 이야기가\n궁금하세요?',
                     style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                          fontSize: 26,
-                          height: 1.3,
-                        ),
+                      fontSize: 26,
+                      height: 1.3,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -160,13 +171,12 @@ class _KeywordScreenState extends State<KeywordScreen> {
   }
 
   void _goToCardDraw(BuildContext context, ReadingArgs? args) {
-    final nextArgs = (args ?? const ReadingArgs(topic: 'daily', topicLabel: '타로 이야기'))
-        .copyWith(tags: _selected.toList());
+    final nextArgs =
+        (args ?? const ReadingArgs(topic: 'daily', topicLabel: '타로 이야기'))
+            .copyWith(tags: _selected.toList());
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => CardDrawScreen(args: nextArgs),
-      ),
+      MaterialPageRoute(builder: (_) => CardDrawScreen(args: nextArgs)),
     );
   }
 }
@@ -203,7 +213,7 @@ class _TagChip extends StatelessWidget {
                   BoxShadow(
                     color: AppTheme.gold.withValues(alpha: 0.2),
                     blurRadius: 8,
-                  )
+                  ),
                 ]
               : null,
         ),
@@ -212,8 +222,7 @@ class _TagChip extends StatelessWidget {
           style: TextStyle(
             color: isSelected ? AppTheme.gold : AppTheme.textSecondary,
             fontSize: 14,
-            fontWeight:
-                isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
       ),

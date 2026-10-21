@@ -5,9 +5,9 @@ card, MBTI, selected keywords, and a three-card spread.
 
 ## Current Release State
 
-- App version: `0.1.0+1`
+- App version: `0.2.0+2` (2026-10-21 local verification candidate)
 - Android package: `com.svil.lovetype_tarot`
-- API base: `https://lovetype-api.railway.app/api/v1`
+- API base: `https://lovetype-api.railway.app/api/v1` (production service is intentionally stopped pending release)
 - Runtime tarot/background assets are optimized as WebP.
 - Server cooldown is the source of truth via `GET /api/v1/tarot/cooltime`.
 - In-app purchases use the platform store flow and send receipts to
@@ -32,6 +32,14 @@ The generated Android upload candidate is:
 ```text
 build/app/outputs/bundle/release/app-release.aab
 ```
+
+## 2026-10-21 검증 후보
+
+기존 스토어 문서 진행분을 통합하고 Google 인증, 서버 영수증 검증·중복 지급 차단, 구매 실패 복구, 쿨타임 계약, 히스토리 큐 및 접근성을 보완했다. 서버 변경은 [배포 보류 초안 PR](https://github.com/kuroicode-beep/lovetype-api/pull/1)에 있으며 아직 운영 서버에 적용하지 않았다.
+
+로컬 기본 빌드는 컴파일·서명 검증용이다. 실제 로그인에는 `GOOGLE_WEB_CLIENT_ID` 빌드 값과 같은 서버 `GOOGLE_CLIENT_ID`가 필요하다. 실제 배포 후보는 설정 파일에 `GOOGLE_WEB_CLIENT_ID`, `API_BASE_URL`을 넣고 `tools/build_store_candidate.ps1`로 만든다. 서버는 Play 계정·검증 권한을 구성하고 기존 의도적 중지 상태의 재개를 확인한 뒤 새 앱과 함께 배포한다. iOS 결제·구독 RTDN·스토어 실결제 검증은 남아 있다.
+
+현재 SDK·패키지 설정은 Flutter 3.47.2 / Dart 3.13.2로 검증했다. 기존 SDK를 업데이트하거나 다른 세션의 캐시를 초기화하지 않았다.
 
 Signing files are intentionally ignored by Git:
 

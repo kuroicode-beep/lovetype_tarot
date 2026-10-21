@@ -10,6 +10,7 @@ import 'storage_service.dart';
 class HistorySyncService {
   HistorySyncService._();
   static final HistorySyncService instance = HistorySyncService._();
+  Future<void>? _flushing;
 
   /// 태그에서 `#` 제거
   static List<String> normalizeTags(List<String> tags) {
@@ -23,10 +24,11 @@ class HistorySyncService {
     required UserModel user,
     required ReadingArgs args,
     required String story,
+    String? readingId,
   }) {
     final tags = normalizeTags(args.tags);
     final today = _formatDate(DateTime.now());
-    return {
+    final body = <String, dynamic>{
       'app_id': AppConstants.appId,
       'user_id': StorageService.instance.effectiveUserIdForHistory(user),
       'date': today,
@@ -37,6 +39,9 @@ class HistorySyncService {
       'soul_card': user.soulCardNumber,
       'mbti': user.mbti,
     };
+    if (readingId != null) body['reading_id'] = readingId;
+    body['client_reading_id'] = StorageService.historyKey(body);
+    return body;
   }
 
   Map<String, dynamic> _cardPayload(TarotCard c) {
@@ -57,10 +62,17 @@ class HistorySyncService {
     required UserModel user,
     required ReadingArgs args,
     required String story,
+    String? readingId,
   }) async {
-    final body = buildHistoryBody(user: user, args: args, story: story);
+    final body = buildHistoryBody(
+      user: user,
+      args: args,
+      story: story,
+      readingId: readingId,
+    );
     try {
       await ApiService.instance.saveTarotHistory(body);
+      await StorageService.instance.removePendingHistory(body);
       return true;
     } catch (_) {
       await StorageService.instance.enqueuePendingHistory(body);
@@ -69,19 +81,23 @@ class HistorySyncService {
   }
 
   /// 앱 기동 시 — 대기 중인 페이로드를 순서대로 재전송
-  Future<void> flushPending() async {
+  Future<void> flushPending() =>
+      _flushing ??= _flush().whenComplete(() => _flushing = null);
+
+  Future<void> _flush() async {
     await StorageService.instance.init();
-    var pending = StorageService.instance.getPendingHistoryEntries();
+    final pending = StorageService.instance.getPendingHistoryEntries();
     if (pending.isEmpty) return;
 
-    final remaining = <Map<String, dynamic>>[];
     for (final body in pending) {
+      if (body['user_id'] != StorageService.instance.googleUserId) continue;
       try {
+        body['client_reading_id'] ??= StorageService.historyKey(body);
         await ApiService.instance.saveTarotHistory(body);
+        await StorageService.instance.removePendingHistory(body);
       } catch (_) {
-        remaining.add(body);
+        /* 미전송 항목은 기존 큐에 그대로 남긴다. */
       }
     }
-    await StorageService.instance.setPendingHistoryEntries(remaining);
   }
 }

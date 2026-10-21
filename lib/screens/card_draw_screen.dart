@@ -51,9 +51,10 @@ class _CardDrawScreenState extends State<CardDrawScreen>
       ),
     );
     _flipAnims = _flipControllers.map((c) {
-      return Tween<double>(begin: 0, end: 1).animate(
-        CurvedAnimation(parent: c, curve: Curves.easeInOut),
-      );
+      return Tween<double>(
+        begin: 0,
+        end: 1,
+      ).animate(CurvedAnimation(parent: c, curve: Curves.easeInOut));
     }).toList();
   }
 
@@ -103,9 +104,8 @@ class _CardDrawScreenState extends State<CardDrawScreen>
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => CardConfirmScreen(
-          args: widget.args.copyWith(cards: selectedCards),
-        ),
+        builder: (_) =>
+            CardConfirmScreen(args: widget.args.copyWith(cards: selectedCards)),
       ),
     );
   }
@@ -134,12 +134,17 @@ class _CardDrawScreenState extends State<CardDrawScreen>
                 // 헤더
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios,
-                            color: AppTheme.textSecondary, size: 20),
+                        icon: const Icon(
+                          Icons.arrow_back_ios,
+                          color: AppTheme.textSecondary,
+                          size: 20,
+                        ),
                         onPressed: () => Navigator.pop(context),
                         padding: EdgeInsets.zero,
                       ),
@@ -158,11 +163,8 @@ class _CardDrawScreenState extends State<CardDrawScreen>
                     children: [
                       Text(
                         '마음이 끌리는 카드를\n한 장씩 선택하세요',
-                        style:
-                            Theme.of(context).textTheme.displayLarge?.copyWith(
-                                  fontSize: 24,
-                                  height: 1.35,
-                                ),
+                        style: Theme.of(context).textTheme.displayLarge
+                            ?.copyWith(fontSize: 24, height: 1.35),
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -183,7 +185,8 @@ class _CardDrawScreenState extends State<CardDrawScreen>
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     itemCount: _displayCount,
-                    separatorBuilder: (context, index) => const SizedBox(width: 16),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: 16),
                     itemBuilder: (context, index) {
                       return _FlippableCard(
                         card: _deck[index],
@@ -205,11 +208,11 @@ class _CardDrawScreenState extends State<CardDrawScreen>
                     width: double.infinity,
                     height: 54,
                     child: ElevatedButton(
-                      onPressed:
-                          selectedCount == 3 ? _goToConfirm : null,
+                      onPressed: selectedCount == 3 ? _goToConfirm : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            selectedCount == 3 ? AppTheme.gold : AppTheme.divider,
+                        backgroundColor: selectedCount == 3
+                            ? AppTheme.gold
+                            : AppTheme.divider,
                         foregroundColor: selectedCount == 3
                             ? AppTheme.backgroundDark
                             : AppTheme.textMuted,
@@ -371,15 +374,15 @@ class _CardFront extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-          child: Transform.rotate(
-            angle: card.isReversed ? pi : 0,
-            child: TarotCardAssetImage(
-              card: card,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  _CardFrontPlaceholder(card: card),
-            ),
+        child: Transform.rotate(
+          angle: card.isReversed ? pi : 0,
+          child: TarotCardAssetImage(
+            card: card,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) =>
+                _CardFrontPlaceholder(card: card),
           ),
+        ),
       ),
     );
   }
@@ -418,7 +421,7 @@ class _CardFrontPlaceholder extends StatelessWidget {
               padding: EdgeInsets.only(top: 4),
               child: Text(
                 '역방향',
-                style: TextStyle(color: AppTheme.textMuted, fontSize: 10),
+                style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
               ),
             ),
         ],
@@ -437,20 +440,17 @@ class _OrderBadge extends StatelessWidget {
       width: 28,
       height: 28,
       decoration: BoxDecoration(
-        color: AppTheme.gold,
+        color: AppTheme.primarySurface,
         shape: BoxShape.circle,
         boxShadow: [
-          BoxShadow(
-            color: AppTheme.gold.withValues(alpha: 0.5),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: AppTheme.gold.withValues(alpha: 0.5), blurRadius: 8),
         ],
       ),
       child: Center(
         child: Text(
           '$order',
           style: const TextStyle(
-            color: AppTheme.backgroundDark,
+            color: AppTheme.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),

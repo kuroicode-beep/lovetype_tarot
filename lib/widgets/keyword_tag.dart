@@ -16,29 +16,33 @@ class KeywordTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.gold.withValues(alpha: 0.2)
-              : AppTheme.backgroundCard,
-          border: Border.all(
-            color: isSelected ? AppTheme.gold : AppTheme.divider,
-            width: isSelected ? 1.5 : 1.0,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          constraints: const BoxConstraints(minHeight: 50),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppTheme.gold.withValues(alpha: 0.2)
+                : AppTheme.backgroundCard,
+            border: Border.all(
+              color: isSelected ? AppTheme.gold : AppTheme.divider,
+              width: isSelected ? 1.5 : 1.0,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: isSelected ? AppTheme.goldGlow : null,
           ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: isSelected ? AppTheme.goldGlow : null,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? AppTheme.gold : AppTheme.textSecondary,
-            fontSize: 13,
-            fontWeight:
-                isSelected ? FontWeight.w600 : FontWeight.normal,
+          child: Text(
+            isSelected ? '✓ $label' : label,
+            style: TextStyle(
+              color: isSelected ? AppTheme.gold : AppTheme.textSecondary,
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
           ),
         ),
       ),

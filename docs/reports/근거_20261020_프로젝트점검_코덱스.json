@@ -1,0 +1,265 @@
+{
+  "checkedAtKst": "2026-10-20 11:38:23 KST",
+  "head": "51826d2",
+  "flutter": "3.47.2",
+  "dart": "3.13.2",
+  "packageConfigFlutter": "3.38.5",
+  "packageConfigDart": "3.10.4",
+  "testsDefined": 17,
+  "testsExecuted": 0,
+  "checks": [
+    {
+      "exitCode": 0,
+      "command": "flutter analyze --no-pub",
+      "result": "No issues found!"
+    },
+    {
+      "exitCode": 1,
+      "command": "flutter test --no-pub --reporter expanded",
+      "result": "Flutter failed to delete a directory at build/unit_test_assets"
+    },
+    {
+      "exitCode": 1,
+      "command": "flutter test --no-pub --no-test-assets --reporter expanded",
+      "result": "SDK dot-shorthands compilation error"
+    },
+    {
+      "exitCode": 1,
+      "command": "flutter test --no-pub --no-test-assets --enable-experiment=dot-shorthands --reporter expanded",
+      "result": "Same SDK dot-shorthands compilation error"
+    },
+    {
+      "failures": 0,
+      "warnings": 1,
+      "exitCode": 0,
+      "command": "tools/verify_store_readiness.ps1 -SkipFlutter",
+      "warning": "Privacy policy operator placeholders"
+    }
+  ],
+  "sourceHashComparison": {
+    "files": 42,
+    "changed": 0
+  },
+  "sourceHashes": [
+    {
+      "Path": "android/app/build.gradle.kts",
+      "Hash": "FC282E30CE64BF4B4D2C50C14240A60F98908E75BA363F4EF3872D3D3A8B44D5"
+    },
+    {
+      "Path": "android/app/src/main/AndroidManifest.xml",
+      "Hash": "5373FA03FF6765A21EE2FA3644F692B82BB68809BF776C0B36D6AEC12EF0A68E"
+    },
+    {
+      "Path": "ios/Runner/Info.plist",
+      "Hash": "00BE3901FE0C6279C396F2079FB6A6497F07DB202A3D5E5F2C7C0EF84AF793C0"
+    },
+    {
+      "Path": "lib/app.dart",
+      "Hash": "FE9532A96D59D8FCB34AE453C90E530C82759D792E292C9DE5C4DB282AE7BA45"
+    },
+    {
+      "Path": "lib/core/app_assets.dart",
+      "Hash": "A79893F5DE94DB5F8A814BC89E3E3A70E5CCC78CC72E97E6CC2AC85C63BCF2CC"
+    },
+    {
+      "Path": "lib/core/app_state.dart",
+      "Hash": "590A8B1088228F515EF13B781CE269895C416E61F7D349D42654E608622F4AAE"
+    },
+    {
+      "Path": "lib/core/card_data.dart",
+      "Hash": "55DC808552712B282E1BB06E817A8FE19B4B2170348CADEC88EA362EBC60FB44"
+    },
+    {
+      "Path": "lib/core/constants.dart",
+      "Hash": "E568CB121956F94B4E4D0F71B5367FEF421B6D435B3C3BA5B03C8EFAE2CDB5FE"
+    },
+    {
+      "Path": "lib/core/soul_card.dart",
+      "Hash": "59248D6082302A427957BC96916E9476E25E11E1D8E5D134DDB8FF3EF179A515"
+    },
+    {
+      "Path": "lib/core/theme.dart",
+      "Hash": "549775985B1C4007047046E288E6E56D832079871EF2DBB2F0DFFE199BCDFB8B"
+    },
+    {
+      "Path": "lib/firebase_options.dart",
+      "Hash": "2B8B701A1347250E0BB206D6ED117B0231239214E5DC5217315FA822CF3C71BE"
+    },
+    {
+      "Path": "lib/main.dart",
+      "Hash": "750CE0939D8D12B4208AD7EEA0ECEA16D5850FBA6C1312E731B08D9F4E89311A"
+    },
+    {
+      "Path": "lib/models/reading_args.dart",
+      "Hash": "D05DBFCF8A43C0EA8C3407D73C6902EF71C489F099660E0201AB1DEA5B860B52"
+    },
+    {
+      "Path": "lib/models/reading_result.dart",
+      "Hash": "85F78B65E9FCA774D9061330AA7E63993AF30443CBDEFEBDDF3A43378397BE61"
+    },
+    {
+      "Path": "lib/models/tarot_card.dart",
+      "Hash": "BA4F43980EA7B3E3B51CB9BB4E7D145E2765754982CF57020531C93D68421700"
+    },
+    {
+      "Path": "lib/models/user_model.dart",
+      "Hash": "D5EE7B0ACC629785E9B59C156BE82D2EF1B343CE0139EDA2FA37BE801D5CC5E1"
+    },
+    {
+      "Path": "lib/screens/card_confirm_screen.dart",
+      "Hash": "6D4E2CEF2624311353E45A4766FA606A22565586CBE1272AF90421C2AF3AF188"
+    },
+    {
+      "Path": "lib/screens/card_draw_screen.dart",
+      "Hash": "102090457EB2921409695FD59280301E99ABC7D4BDB0C4C082979BD9CFFAEA35"
+    },
+    {
+      "Path": "lib/screens/info_input_screen.dart",
+      "Hash": "C64EED00B1197783B0E7A35DE9D60D0C0E6091166DD1BE8B98DB16C03589E5FF"
+    },
+    {
+      "Path": "lib/screens/intro_screen.dart",
+      "Hash": "DD81FFD516C079A0E79703C65EA5313F1DF32FFD9F515E4A7ED656B9F21E1B46"
+    },
+    {
+      "Path": "lib/screens/keyword_screen.dart",
+      "Hash": "1A5AF137840CF8625C4A34BC694DF6C03BF22E060072994602B37CB4D6B5A3EB"
+    },
+    {
+      "Path": "lib/screens/main_screen.dart",
+      "Hash": "DC079CA61E0FA9C29311B914BE51BEAAFD6258A7F7A29330A91C7B6EF69042AD"
+    },
+    {
+      "Path": "lib/screens/result_screen.dart",
+      "Hash": "A3C43FFDBD1E40AED9F9A8AC351520C6C1C34D3CD638CA3DBA36A26EDA59CFFE"
+    },
+    {
+      "Path": "lib/screens/signup_screen.dart",
+      "Hash": "21E6955DCCEB4592EF52523F3FE655AFE06C37A5E6F2BCDFCAC2DBD7AB3A731A"
+    },
+    {
+      "Path": "lib/screens/soul_card_screen.dart",
+      "Hash": "F912D9C944085DDA07CCBE47AB5C9E63B37138EEF6E94D5F8E96E1D0D842E37E"
+    },
+    {
+      "Path": "lib/services/api_service.dart",
+      "Hash": "6BBCBB3528D4278AE3D4E694D8B522D0353EAEA5B22ADBD636843BB5E52E7DB6"
+    },
+    {
+      "Path": "lib/services/auth_service.dart",
+      "Hash": "C4D5E2F3BD11924FD4382E546797C07836C5EE85FDF19F829F5C222795B226DB"
+    },
+    {
+      "Path": "lib/services/fcm_background.dart",
+      "Hash": "F029B938C301A7990D441B7FFB22DEDEA6D5E73189C46527C7D72A58C2F92F06"
+    },
+    {
+      "Path": "lib/services/history_sync_service.dart",
+      "Hash": "55C22A5816D802F8BFD6CEC9BB982ABC7ED1DBA571C8865899C19B348EFDB8E0"
+    },
+    {
+      "Path": "lib/services/iap_service.dart",
+      "Hash": "33180320ED81BD97CE9EC0BB66A7B21EE73F2FFB368EB3D13E97C5298CB85376"
+    },
+    {
+      "Path": "lib/services/notification_service.dart",
+      "Hash": "BBC2516974E4B258DA87EC1D7450509C7CD0FBAFCE8BA0CFA2A01315E2C4B376"
+    },
+    {
+      "Path": "lib/services/payment_service.dart",
+      "Hash": "6ABC9EC6F22FA50FB54D02E908B735C0C339534C1AE81F984E77D2CD16CB1D3B"
+    },
+    {
+      "Path": "lib/services/push_service.dart",
+      "Hash": "79E3143A0C9D0BB66D89ED975624037898D869F5A6386B39108E0BEFB63AD581"
+    },
+    {
+      "Path": "lib/services/storage_service.dart",
+      "Hash": "C94488A9A0AE4813B7391749CF9E0D8632E94DEFD535FAA13280FBDF8105A71E"
+    },
+    {
+      "Path": "lib/services/tts_service.dart",
+      "Hash": "E7515531C8377B49E1474BFC4DA1A02858056D68190AAEF6902C10A372F84FDB"
+    },
+    {
+      "Path": "lib/widgets/bottom_bar.dart",
+      "Hash": "1BE8353DA60603736BD1DC87D8BDEF79A3A89FFFD3BC0D2DADC714A522389827"
+    },
+    {
+      "Path": "lib/widgets/keyword_tag.dart",
+      "Hash": "C9FA518F416A7652643305813FCF7C3FBB2A75DA7C66CFD26A4D68618BD89D1B"
+    },
+    {
+      "Path": "lib/widgets/soul_card_avatar.dart",
+      "Hash": "58F44D284F5C967D1B2FD5F07F93A9007300D44D4E0E59556872FD0D36250365"
+    },
+    {
+      "Path": "lib/widgets/tarot_card_asset_image.dart",
+      "Hash": "B30409D04E53BACF458C8F90E767B17312E6714B32EF5E800F899FE87AC417FE"
+    },
+    {
+      "Path": "lib/widgets/tarot_card_widget.dart",
+      "Hash": "CCA7712B6C550761A9E780CDCCE7AD2F20FEA7609A0411D496DFB2CC36AC06F9"
+    },
+    {
+      "Path": "pubspec.yaml",
+      "Hash": "E304EFA1873C0AC4A40EA95E9F7DA5DE4E3032C265846E0E67EF775472525A1E"
+    },
+    {
+      "Path": "test/widget_test.dart",
+      "Hash": "09A80C5FEB75A825D4F9D69674E1CD780602B565122DAFE7FF62489463F84E5C"
+    }
+  ],
+  "contract": {
+    "checkedAt": "2026-10-20T02:37:22.373Z",
+    "scope": "로컬 소스와 메모리 모형만 사용, 네트워크 및 실제 DB 접근 없음",
+    "backendSource": "C:/Projects/lovetype-api/src/routes/v1.js",
+    "cooldown": {
+      "appQuery": {
+        "status": 200,
+        "body": {
+          "available": true,
+          "remaining_seconds": 0
+        }
+      },
+      "serverExpectedQuery": {
+        "status": 200,
+        "body": {
+          "available": false,
+          "remaining_seconds": 3600
+        }
+      }
+    },
+    "payment": {
+      "withoutReceiptOrAuthorization": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "balance": 10,
+          "is_subscribed": false,
+          "sub_expires": null
+        }
+      },
+      "repeatedSameRequest": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "balance": 20,
+          "is_subscribed": false,
+          "sub_expires": null
+        }
+      }
+    },
+    "assertions": 5,
+    "passed": true
+  },
+  "bundle": {
+    "path": "build/app/outputs/bundle/release/app-release.aab",
+    "freshBuild": false,
+    "sha256": "0A44A9EC34232FE0AE593EDDCF74C70394B7F41CEDE6312EABC8E6418FFB2B0A",
+    "createdDate": "2026-06-28",
+    "bytes": 63426668
+  },
+  "productionMutations": false,
+  "outlineWorklogReadbackVerified": true
+}

@@ -38,8 +38,11 @@ class CardConfirmScreen extends StatelessWidget {
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios,
-                            color: AppTheme.textSecondary, size: 20),
+                        icon: const Icon(
+                          Icons.arrow_back_ios,
+                          color: AppTheme.textSecondary,
+                          size: 20,
+                        ),
                         onPressed: () => Navigator.pop(context),
                         padding: EdgeInsets.zero,
                       ),
@@ -57,9 +60,9 @@ class CardConfirmScreen extends StatelessWidget {
 
                   Text(
                     '뽑은 카드',
-                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                          fontSize: 24,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.displayLarge?.copyWith(fontSize: 24),
                   ),
                   const SizedBox(height: 28),
 
@@ -69,10 +72,7 @@ class CardConfirmScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: List.generate(args.cards.length, (i) {
                       final card = args.cards[i];
-                      return _CardPreview(
-                        card: card,
-                        position: _positions[i],
-                      );
+                      return _CardPreview(card: card, position: _positions[i]);
                     }),
                   ),
 
@@ -90,10 +90,7 @@ class CardConfirmScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _SummaryRow(
-                          label: '주제',
-                          value: args.topicLabel,
-                        ),
+                        _SummaryRow(label: '주제', value: args.topicLabel),
                         const SizedBox(height: 8),
                         _SummaryRow(
                           label: '키워드',
@@ -117,8 +114,8 @@ class CardConfirmScreen extends StatelessWidget {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.gold,
-                        foregroundColor: AppTheme.backgroundDark,
+                        backgroundColor: AppTheme.primarySurface,
+                        foregroundColor: AppTheme.textPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
@@ -181,7 +178,7 @@ class _CardPreview extends StatelessWidget {
                       card.nameKo,
                       style: const TextStyle(
                         color: AppTheme.gold,
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
@@ -204,7 +201,7 @@ class _CardPreview extends StatelessWidget {
             position,
             style: const TextStyle(
               color: AppTheme.gold,
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -232,7 +229,7 @@ class _CardPreview extends StatelessWidget {
             color: isReversed
                 ? AppTheme.error.withValues(alpha: 0.8)
                 : AppTheme.textSecondary,
-            fontSize: 11,
+            fontSize: 12,
           ),
         ),
       ],
@@ -255,20 +252,14 @@ class _SummaryRow extends StatelessWidget {
           width: 44,
           child: Text(
             label,
-            style: const TextStyle(
-              color: AppTheme.textMuted,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
           ),
         ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              color: AppTheme.textPrimary,
-              fontSize: 13,
-            ),
+            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
           ),
         ),
       ],

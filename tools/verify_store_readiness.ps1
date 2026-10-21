@@ -1,4 +1,4 @@
-param(
+﻿param(
     [switch]$SkipFlutter,
     [switch]$SkipBundleCheck
 )
@@ -66,8 +66,14 @@ Require-File "docs/store-registration-completion-audit-2026-06-28.md" "Store com
 Require-File "docs/privacy-policy-ko.md" "Privacy policy draft"
 Require-File "docs/store-listing-draft-ko.md" "Store listing draft"
 
-Require-Text "pubspec.yaml" "(?m)^version:\s*0\.1\.0\+1\s*$" "pubspec version is 0.1.0+1"
-Require-Text "lib/core/constants.dart" "appVersion\s*=\s*'0\.1\.0'" "AppConstants.appVersion matches pubspec build name"
+$pubspec = Get-Content 'pubspec.yaml' -Raw -Encoding UTF8
+$constants = Get-Content 'lib/core/constants.dart' -Raw -Encoding UTF8
+$version = [regex]::Match($pubspec, '(?m)^version:\s*(\d+\.\d+\.\d+)\+\d+\s*$').Groups[1].Value
+if ($version -and $constants.Contains("appVersion = '$version'")) {
+    Add-Pass "App version matches pubspec: $version"
+} else {
+    Add-Failure "AppConstants.appVersion differs from pubspec"
+}
 Require-Text "android/app/build.gradle.kts" "applicationId\s*=\s*`"com\.svil\.lovetype_tarot`"" "Android applicationId is com.svil.lovetype_tarot"
 Require-Text "android/app/src/main/AndroidManifest.xml" "com\.android\.vending\.BILLING" "Android Billing permission is declared"
 Require-Text "android/app/build.gradle.kts" "Missing android/key\.properties" "Release build blocks missing signing config"

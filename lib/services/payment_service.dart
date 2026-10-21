@@ -92,6 +92,16 @@ class PaymentService {
     BuildContext context, {
     required UserModel user,
   }) async {
+    await IapService.instance.init();
+    final products = await IapService.instance.loadProducts();
+    if (!context.mounted) return false;
+    if (products.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('스토어 상품을 확인할 수 없어요. 잠시 뒤 다시 확인할 수 있어요.')),
+      );
+      return false;
+    }
+    final prices = {for (final product in products) product.id: product.price};
     final purchased =
         await showDialog<bool>(
           context: context,
@@ -120,18 +130,18 @@ class PaymentService {
                 onPressed: () async {
                   await _startStorePurchase(context, user, 'tarot_10p');
                 },
-                child: const Text(
-                  '1,000원 충전',
-                  style: TextStyle(color: AppTheme.gold),
+                child: Text(
+                  '${prices['tarot_10p'] ?? '상품 확인 필요'} · 10P',
+                  style: const TextStyle(color: AppTheme.gold),
                 ),
               ),
               TextButton(
                 onPressed: () async {
                   await _startStorePurchase(context, user, 'tarot_sub');
                 },
-                child: const Text(
-                  '월 구독 4,900원',
-                  style: TextStyle(color: AppTheme.gold),
+                child: Text(
+                  '${prices['tarot_sub'] ?? '상품 확인 필요'} · 구독',
+                  style: const TextStyle(color: AppTheme.gold),
                 ),
               ),
             ],

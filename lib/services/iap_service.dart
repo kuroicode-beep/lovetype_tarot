@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -8,6 +11,7 @@ import '../models/user_model.dart';
 import 'api_service.dart';
 import 'payment_service.dart';
 import 'storage_service.dart';
+import 'purchase_recovery.dart';
 
 /// v5.2: 스토어 실결제 → 영수증을 Railway `POST /payment/charge`로 전달
 class IapService {
@@ -16,13 +20,21 @@ class IapService {
 
   StreamSubscription<List<PurchaseDetails>>? _sub;
   bool _initialized = false;
+  Future<void>? _initializing;
   bool storeAvailable = false;
 
   /// 진행 중 구매에 대응할 사용자 (단일 플로우)
-  UserModel? _pendingUser;
+  bool _buying = false;
   String? _pendingProductId;
   Future<void> Function()? _onSuccess;
   Future<void> Function(String message)? _onError;
+  static const _secure = FlutterSecureStorage();
+  late final PurchaseRecovery _recovery = PurchaseRecovery(
+    read: () => _secure.read(key: 'pending_store_receipts'),
+    write: (value) =>
+        _secure.write(key: 'pending_store_receipts', value: value),
+    send: ApiService.instance.postPaymentCharge,
+  );
 
   static const Map<String, IapProductConfig> products = {
     'tarot_10p': IapProductConfig.consumable(
@@ -64,24 +76,25 @@ class IapService {
 
   static Set<String> get productIds => products.keys.toSet();
 
-  Future<void> init() async {
+  Future<void> init() =>
+      _initializing ??= _init().whenComplete(() => _initializing = null);
+
+  Future<void> _init() async {
     if (_initialized) return;
-    _initialized = true;
-    storeAvailable = await InAppPurchase.instance.isAvailable();
-    if (!storeAvailable) {
-      debugPrint('[IapService] 스토어 사용 불가(에뮬레이터 등)');
-      return;
-    }
+    await _sub?.cancel();
     _sub = InAppPurchase.instance.purchaseStream.listen(
       _onPurchaseUpdate,
       onError: (Object e, StackTrace st) =>
           debugPrint('[IapService] stream $e'),
     );
+    storeAvailable = await InAppPurchase.instance.isAvailable();
+    _initialized = true;
   }
 
   Future<void> dispose() async {
     await _sub?.cancel();
     _sub = null;
+    _initialized = false;
   }
 
   Future<List<ProductDetails>> loadProducts() async {
@@ -103,8 +116,8 @@ class IapService {
     Future<void> Function()? onSuccess,
     Future<void> Function(String message)? onError,
   }) async {
-    if (!storeAvailable) return false;
-    _pendingUser = user;
+    if (!storeAvailable || _buying) return false;
+    _buying = true;
     _pendingProductId = productId;
     _onSuccess = onSuccess;
     _onError = onError;
@@ -118,14 +131,25 @@ class IapService {
       return false;
     }
     final product = response.productDetails.first;
-    final param = PurchaseParam(productDetails: product);
+    final uid = StorageService.instance.effectiveUserIdForHistory(user);
+    final param = PurchaseParam(
+      productDetails: product,
+      applicationUserName: sha256.convert(utf8.encode(uid)).toString(),
+    );
     try {
       if (productId == 'tarot_sub') {
-        return await InAppPurchase.instance.buyNonConsumable(
+        final started = await InAppPurchase.instance.buyNonConsumable(
           purchaseParam: param,
         );
+        if (!started) _clearPending();
+        return started;
       }
-      return await InAppPurchase.instance.buyConsumable(purchaseParam: param);
+      final started = await InAppPurchase.instance.buyConsumable(
+        purchaseParam: param,
+        autoConsume: false,
+      );
+      if (!started) _clearPending();
+      return started;
     } catch (e) {
       debugPrint('[IapService] buy error: $e');
       await _notifyFailure('결제 시작에 실패했습니다. 잠시 후 다시 시도해 주세요.');
@@ -135,7 +159,7 @@ class IapService {
   }
 
   Future<void> _onPurchaseUpdate(List<PurchaseDetails> purchases) async {
-    final user = _pendingUser;
+    final user = StorageService.instance.loadUser();
     for (final purchase in purchases) {
       if (purchase.status == PurchaseStatus.pending) continue;
 
@@ -148,28 +172,25 @@ class IapService {
 
       if (purchase.status == PurchaseStatus.canceled) {
         _clearPending();
-        if (purchase.pendingCompletePurchase) {
+        if (purchase.pendingCompletePurchase &&
+            defaultTargetPlatform != TargetPlatform.android) {
           await InAppPurchase.instance.completePurchase(purchase);
         }
         continue;
       }
 
       if (purchase.status == PurchaseStatus.restored) {
-        // 복원은 구독만 의미 있음 — 서버 중복 충전 방지 위해 구독만 처리
-        if (purchase.productID == 'tarot_sub' && user != null) {
+        // 복원 거래도 서버의 영수증 고유 키로 중복 지급 없이 처리한다.
+        if (user != null && StorageService.instance.googleUserId != null) {
           await _sendReceiptToBackend(purchase, user, notifySuccess: false);
-        }
-        if (purchase.pendingCompletePurchase) {
-          await InAppPurchase.instance.completePurchase(purchase);
         }
         continue;
       }
 
-      if (purchase.status == PurchaseStatus.purchased && user != null) {
+      if (purchase.status == PurchaseStatus.purchased &&
+          user != null &&
+          StorageService.instance.googleUserId != null) {
         await _sendReceiptToBackend(purchase, user, notifySuccess: true);
-        if (purchase.pendingCompletePurchase) {
-          await InAppPurchase.instance.completePurchase(purchase);
-        }
       }
 
       _clearPending();
@@ -188,17 +209,29 @@ class IapService {
     try {
       final config =
           products[purchase.productID] ?? products[_pendingProductId];
-      await ApiService.instance.postPaymentCharge({
-        'app_id': AppConstants.appId,
-        'user_id': StorageService.instance.effectiveUserIdForHistory(user),
-        'product_id': purchase.productID,
-        'receipt': receipt,
-        'amount': config?.credits ?? 0,
-        'product_type': config?.type.name ?? 'unknown',
-        'platform': defaultTargetPlatform.name,
-        'transaction_id': purchase.purchaseID,
-        'source': 'in_app_purchase',
-      });
+      final granted = await _recovery.process(
+        {
+          'app_id': AppConstants.appId,
+          'user_id': StorageService.instance.effectiveUserIdForHistory(user),
+          'product_id': purchase.productID,
+          'receipt': receipt,
+          'amount': config?.credits ?? 0,
+          'product_type': config?.type.name ?? 'unknown',
+          'platform': defaultTargetPlatform.name,
+          'transaction_id': purchase.purchaseID,
+          'source': 'in_app_purchase',
+        },
+        complete: () async {
+          if (purchase.pendingCompletePurchase &&
+              defaultTargetPlatform != TargetPlatform.android) {
+            await InAppPurchase.instance.completePurchase(purchase);
+          }
+        },
+      );
+      if (!granted) {
+        await _notifyFailure('결제 확인을 기다리고 있어요. 영수증은 보관되며 다시 로그인하면 재시도해요.');
+        return;
+      }
       await PaymentService.instance.refreshBalance(user);
       if (notifySuccess) {
         final cb = _onSuccess;
@@ -212,13 +245,27 @@ class IapService {
   }
 
   Future<void> restorePurchases(UserModel user) async {
-    _pendingUser = user;
+    await init();
     _pendingProductId = 'tarot_sub';
-    await InAppPurchase.instance.restorePurchases();
+    await InAppPurchase.instance.restorePurchases(
+      applicationUserName: sha256
+          .convert(
+            utf8.encode(
+              StorageService.instance.effectiveUserIdForHistory(user),
+            ),
+          )
+          .toString(),
+    );
+  }
+
+  /// 서버가 승인한 뒤 스토어도 처리하므로 재시작 후 영수증만으로 복구할 수 있다.
+  Future<void> retryPending() async {
+    final uid = StorageService.instance.googleUserId;
+    if (uid != null) await _recovery.retry(uid);
   }
 
   void _clearPending() {
-    _pendingUser = null;
+    _buying = false;
     _pendingProductId = null;
     _onSuccess = null;
     _onError = null;

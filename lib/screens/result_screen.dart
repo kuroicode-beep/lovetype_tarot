@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:uuid/uuid.dart';
 import '../core/app_assets.dart';
 import '../core/theme.dart';
 import '../core/soul_card.dart';
@@ -29,7 +30,8 @@ class _ResultScreenState extends State<ResultScreen>
   String? _errorMessage;
   bool _isSpeaking = false;
   bool _isSaved = false;
-  bool _pointUsed = false;
+  final String _requestId = const Uuid().v4();
+  String? _readingId;
 
   late AnimationController _loadingController;
   UserModel? _user;
@@ -63,7 +65,8 @@ class _ResultScreenState extends State<ResultScreen>
     }
 
     try {
-      final text = await ApiService.instance.tarotReading(
+      final reading = await ApiService.instance.tarotReading(
+        requestId: _requestId,
         user: _user!,
         topic: widget.args.topic,
         topicLabel: widget.args.topicLabel,
@@ -72,19 +75,21 @@ class _ResultScreenState extends State<ResultScreen>
       );
       if (mounted) {
         setState(() {
-          _resultText = text;
+          _resultText = reading.text;
+          _readingId = reading.id;
           _isLoading = false;
         });
         // v4.0: 결과 로딩 완료 후 서버 저장 (실패 시 history_pending)
         final synced = await HistorySyncService.instance.uploadReading(
           user: _user!,
           args: widget.args,
-          story: text,
+          story: reading.text,
+          readingId: reading.id,
         );
         if (mounted) {
           setState(() => _isSaved = synced);
         }
-        await _usePointsIfNeeded();
+        await PaymentService.instance.refreshBalance(_user!);
         await _scheduleServerCooldownNotification();
       }
     } catch (e) {
@@ -94,33 +99,6 @@ class _ResultScreenState extends State<ResultScreen>
           _errorMessage = '이야기를 불러오는 중 오류가 발생했습니다.\n잠시 후 다시 시도해 주세요.';
         });
       }
-    }
-  }
-
-  Future<void> _usePointsIfNeeded() async {
-    if (_pointUsed || _user == null) return;
-    final amount = PaymentService.instance.requiredPointsForTopic(
-      widget.args.topic,
-    );
-    if (amount <= 0) {
-      _pointUsed = true;
-      return;
-    }
-    final ok = await PaymentService.instance.usePoints(
-      user: _user!,
-      amount: amount,
-      reason: widget.args.topicLabel,
-    );
-    if (!mounted) return;
-    _pointUsed = ok;
-    if (!ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('포인트 차감에 실패했습니다. 잠시 후 다시 시도해 주세요.'),
-          backgroundColor: AppTheme.backgroundCard,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
     }
   }
 
@@ -182,6 +160,7 @@ class _ResultScreenState extends State<ResultScreen>
       user: _user!,
       args: widget.args,
       story: _resultText!,
+      readingId: _readingId,
     );
     if (!mounted) return;
     setState(() => _isSaved = ok);
@@ -444,7 +423,7 @@ class _ResultText extends StatelessWidget {
           text,
           style: const TextStyle(
             color: AppTheme.textPrimary,
-            fontSize: 15,
+            fontSize: 18,
             height: 1.8,
           ),
         ),
@@ -524,23 +503,26 @@ class _ActionBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isActive ? AppTheme.gold : AppTheme.textSecondary,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isActive ? AppTheme.gold : AppTheme.textMuted,
-              fontSize: 11,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 50, minHeight: 50),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isActive ? AppTheme.gold : AppTheme.textSecondary,
+              size: 24,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isActive ? AppTheme.gold : AppTheme.textMuted,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

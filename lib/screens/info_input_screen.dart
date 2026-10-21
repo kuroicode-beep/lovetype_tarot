@@ -43,10 +43,10 @@ class _InfoInputScreenState extends State<InfoInputScreen> {
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: Theme.of(context).colorScheme.copyWith(
-                primary: AppTheme.gold,
-                onPrimary: AppTheme.backgroundDark,
-                surface: AppTheme.backgroundCard,
-              ),
+            primary: AppTheme.gold,
+            onPrimary: AppTheme.backgroundDark,
+            surface: AppTheme.backgroundCard,
+          ),
         ),
         child: child!,
       ),
@@ -177,8 +177,9 @@ class _InfoInputScreenState extends State<InfoInputScreen> {
                     child: ElevatedButton(
                       onPressed: _isValid ? _submit : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            _isValid ? AppTheme.gold : AppTheme.divider,
+                        backgroundColor: _isValid
+                            ? AppTheme.gold
+                            : AppTheme.divider,
                         foregroundColor: _isValid
                             ? AppTheme.backgroundDark
                             : AppTheme.textMuted,
@@ -265,9 +266,7 @@ class _BirthdatePicker extends StatelessWidget {
             Icon(
               Icons.calendar_today_outlined,
               size: 18,
-              color: birthdate.isNotEmpty
-                  ? AppTheme.gold
-                  : AppTheme.textMuted,
+              color: birthdate.isNotEmpty ? AppTheme.gold : AppTheme.textMuted,
             ),
             const SizedBox(width: 10),
             Text(
@@ -282,8 +281,7 @@ class _BirthdatePicker extends StatelessWidget {
             const Spacer(),
             if (soulCardNumber != null)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppTheme.gold.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
@@ -292,7 +290,7 @@ class _BirthdatePicker extends StatelessWidget {
                   '${soulCardNames[soulCardNumber]}',
                   style: const TextStyle(
                     color: AppTheme.gold,
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -408,8 +406,10 @@ class _InputField extends StatelessWidget {
         counterText: '',
         filled: true,
         fillColor: AppTheme.backgroundCard,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(

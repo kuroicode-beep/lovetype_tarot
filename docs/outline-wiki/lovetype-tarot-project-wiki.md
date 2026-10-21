@@ -86,3 +86,13 @@ Flutter 앱, 로컬 저장소, Railway API, Firebase/FCM, IAP, Outline 문서 �
 - `docs/store-registration-completion-audit-2026-06-28.md`
 - `docs/store-console-runbook-2026-06-28.md`
 - `docs/qa-iap-store-2026-06-28.md`
+
+## 2026-10-21 로컬 검증 후보 0.2.0+2
+
+## 결과
+
+앱 `0.2.0+2`의 로컬 검증 후보를 만들었다. 이전 스토어 문서 6개를 기존 커밋 `c0a48a1` 그대로 master에 통합하고, 인증·결제·쿨타임·구매 복구·히스토리 큐·접근성을 수정했다. 운영 API는 출시 전 비용 방지를 위해 중지된 기록과 현재 Railway 상태를 확인했으므로 재기동하지 않았다. 이 결과는 실서비스 출시 완료가 아니다.
+
+
+상세: docs/reports/완료보고_20261021_출시차단수정_코덱스.md · 서버 초안 PR https://github.com/kuroicode-beep/lovetype-api/pull/1
+

@@ -20,6 +20,7 @@ class ApiService {
   final http.Client _client = http.Client();
 
   String? _bearerToken;
+  Future<String?> Function()? refreshToken;
 
   /// 로그인 후 서버에서 받은 access_token 설정 (보호 API용)
   void setBearerToken(String? token) => _bearerToken = token;
@@ -44,7 +45,15 @@ class ApiService {
     final uri = query == null || query.isEmpty
         ? base
         : base.replace(queryParameters: query);
-    final response = await _client.get(uri, headers: _headers);
+    var response = await _client
+        .get(uri, headers: _headers)
+        .timeout(const Duration(seconds: 30));
+    if (response.statusCode == 401 && refreshToken != null) {
+      _bearerToken = await refreshToken!();
+      response = await _client
+          .get(uri, headers: _headers)
+          .timeout(const Duration(seconds: 30));
+    }
     return _parse(response);
   }
 
@@ -53,11 +62,18 @@ class ApiService {
     Map<String, dynamic> body,
   ) async {
     final uri = Uri.parse('${AppConstants.baseUrl}$path');
-    final response = await _client.post(
-      uri,
-      headers: _headers,
-      body: jsonEncode(body),
-    );
+    final encoded = jsonEncode(body);
+    var response = await _client
+        .post(uri, headers: _headers, body: encoded)
+        .timeout(const Duration(seconds: 90));
+    if (response.statusCode == 401 &&
+        refreshToken != null &&
+        path != AppConstants.authGoogleEndpoint) {
+      _bearerToken = await refreshToken!();
+      response = await _client
+          .post(uri, headers: _headers, body: encoded)
+          .timeout(const Duration(seconds: 90));
+    }
     return _parse(response);
   }
 
@@ -65,7 +81,10 @@ class ApiService {
 
   /// POST /api/v1/auth/google
   Future<Map<String, dynamic>> authGoogle({required String idToken}) async {
-    return post(AppConstants.authGoogleEndpoint, {'id_token': idToken});
+    return post(AppConstants.authGoogleEndpoint, {
+      'app_id': AppConstants.appId,
+      'id_token': idToken,
+    });
   }
 
   // ── 결제 ───────────────────────────────────────────────────
@@ -145,7 +164,8 @@ class ApiService {
   }
 
   /// 타로 리딩 API 호출 → DeepSeek 프롬프트 조합 후 결과 텍스트 반환
-  Future<String> tarotReading({
+  Future<GeneratedReading> tarotReading({
+    required String requestId,
     required UserModel user,
     required String topic,
     required String topicLabel,
@@ -185,12 +205,32 @@ MBTI는 ${user.mbti}야.
       'prompt': prompt,
       'user_mbti': user.mbti,
       'soul_card': user.soulCardNumber,
+      'user_id': _effectiveUserId(user),
+      'request_id': requestId,
+      'tags': tags,
+      'cards': cards
+          .map(
+            (c) => {
+              'id': c.id,
+              'name': c.nameKo,
+              'direction': c.isReversed ? 'reversed' : 'upright',
+            },
+          )
+          .toList(),
     });
 
-    return result['result'] as String? ??
-        result['text'] as String? ??
-        result['content'] as String? ??
-        '이야기를 불러오는 데 실패했습니다.';
+    final text = result['result'];
+    final id = result['reading_id'];
+    if (result['success'] != true ||
+        text is! String ||
+        text.trim().isEmpty ||
+        id is! String) {
+      throw const ApiException(
+        statusCode: 502,
+        message: 'invalid_reading_response',
+      );
+    }
+    return GeneratedReading(id: id, text: text);
   }
 
   /// v4.0: 리딩 결과 서버 저장 — 성공 시 서버가 부여한 id (있으면)
@@ -220,6 +260,12 @@ MBTI는 ${user.mbti}야.
     }
     throw ApiException(statusCode: response.statusCode, message: response.body);
   }
+}
+
+class GeneratedReading {
+  final String id;
+  final String text;
+  const GeneratedReading({required this.id, required this.text});
 }
 
 class TarotCooltimeStatus {

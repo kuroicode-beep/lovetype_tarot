@@ -1,0 +1,40 @@
+{
+  "dateKst": "2026-10-21",
+  "appVersion": "0.2.0+2",
+  "flutter": "3.47.2",
+  "dart": "3.13.2",
+  "flutterTestsPassed": 21,
+  "apiTestsPassed": 12,
+  "analysisExit": 0,
+  "flutterTestsExit": 0,
+  "apiTestsExit": 0,
+  "releaseAabExit": 0,
+  "signatureExit": 0,
+  "zipCrcEntryCount": 745,
+  "zipCrcValid": true,
+  "storeStaticFailures": 0,
+  "storeStaticWarnings": 0,
+  "fontFilesMatchCanonical": 2,
+  "smallFontsBelow12": 0,
+  "artifact": {
+    "AabBytes": 76794534,
+    "Sha256": "B1C95F1DE4482083375CBB104651FAE66843CACB2F35F55DBC2DFB4ACB381C54",
+    "SignatureExit": 0,
+    "CopyVerified": true,
+    "ShortcutVerified": true
+  },
+  "backendCodeCommit": "20cbee2bd6282b73bc7a179fc2432fb40c612951",
+  "backendCiCommit": "1cf9bfe2b9ce54b2140d44e7d27ac0ee05445283",
+  "backendPr": "https://github.com/kuroicode-beep/lovetype-api/pull/1",
+  "productionDeployPerformed": false,
+  "productionStopPreserved": true,
+  "liveStoreVerified": false,
+  "realPostgresConcurrencyVerified": false,
+  "iosReceiptVerificationImplemented": false,
+  "remainingModerateNpmAdvisories": 8,
+  "notes": [
+    "Google/Play 설정 및 실기기 검증 전 검증용 빌드",
+    "서버 PR은 main 병합 및 재기동 전 검토 상태",
+    "라이선스 포함 및 사본 해시 재조회"
+  ]
+}

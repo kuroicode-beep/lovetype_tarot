@@ -4,10 +4,17 @@ class AppConstants {
 
   // ── 앱 식별자 ──────────────────────────────────────────────
   static const String appId = 'lovetype-tarot';
-  static const String appVersion = '0.1.0';
+  static const String appVersion = '0.2.0';
+  static const versionHistory = [
+    ('0.2.0', '2026-10-21', 'Google 로그인, 결제 검증·복구, 서버 쿨타임, 접근성 개선'),
+    ('0.1.0', '2026-06-28', '타로 MVP 및 스토어 준비'),
+  ];
 
   // ── API ───────────────────────────────────────────────────
-  static const String baseUrl = 'https://lovetype-api.railway.app';
+  static const String baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://lovetype-api.railway.app',
+  );
   static const String apiVersion = '/api/v1';
 
   /// 백엔드 노출 API (Railway lovetype-api)
